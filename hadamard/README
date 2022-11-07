@@ -1,0 +1,93 @@
+Example code for some Hadamard, Walsh, and Sylvester matrices and transforms.
+
+Sylvester matrices and transforms are the original versions.
+Sequency matrices and transforms have the rows ordered by sequency.
+Dyadic matrices and transforms have rows ordered by the Gray code
+of the sequency. Other functions (such as for non-power-of-two sizes)
+exist as well, though we don't implement them. "Sylvester" is also called
+"normal" or "Hadamard".
+
+This code is written in simple Java, so it can easily be ported or translated.
+It is intended as an example, using integers. The code can easily be
+tweaked to transform other types of information, such as doubles or
+vectors or whole statistical data sets or whatever.
+
+These functions enable us to compare the results of slow Hadamard matrix
+multiplications with fast Hadamard transforms. A unit test does this.
+
+Video notes on Hadamard matrices and transforms can be found at
+www.youtube.com/@puppydogosaurandraccoonosaur
+
+ * Hadamard.java
+
+   This class contains two main sets of functions: the matrix and
+   the transform functions. This is the main class.
+
+    * The Matrix Functions
+
+      int[][] sylvesterMatrix(int size)
+      int[][] sequencyMatrix(int size)
+      int[][] dyadicMatrix(int size)
+
+      These functions create the various Hadamard matrices.
+      The size argument must be a power of two.
+
+    * The Fast Transform Functions
+
+      int[] fastSylvesterTransform(int[] vector)
+      int[] fastSequencyTransform(int[] vector)
+      int[] fastDyadicTransform(int[] vector)
+
+      <T> T[] fastSylvesterTransform(T[] vector)
+      <T> T[] fastSequencyTransform(T[] vector)
+      <T> T[] fastDyadicTransform(T[] vector)
+
+      The fast transform functions compute Hadamard transforms in O(n log n)
+      time and O(n) space. One version works with integers and the other
+      works with templated values. The template versions can transform any
+      type T that extends the HadamardValue class. The input vectors must
+      have lengths that are powers of two.
+
+    * Other Functions
+
+      int[] apply(int[][] matrix, int[] vector)
+      int[][] sylvesterButterfly(int[] vector)
+
+      The apply() function multiplies a matrix by a vector, computing
+      Hadamard transforms slowly in O(n^2) time and space.
+      The sylvesterButterfly() function computes the whole butterfly
+      for the Sylvester transform.
+
+ * HadamardValue.java
+
+   This interface provides an example of how to extend other types so
+   that fast Hadamard transforms applies to them, too. The test class
+   contains a complete example.
+
+ * Utility.java
+
+   This class holds some functions that don't fit anywhere else.
+
+ * ConjectureContainsTest.java
+
+   This class contains the first set of tests written for the Hadamard
+   population conjecture. It tests that if 2 bits in a vector are set,
+   then the dot product of the Hadamard transform of the 2 bits with the
+   Hadamard transform of the test vector equals two times the length.
+   We needed this was the specific test that for our application. This
+   test worked up to vectors of size 16, but going beyond that required
+   a different approach. As a stab in the dark, we simply tried intersecting
+   two random vectors and flipping a bit. Surprisingly, this worked.
+
+ * ConjectureEqualsTest.java
+
+   This class contains the second set of tests written for the Hadamard
+   population conjecture. After thinking about the contains tests for
+   a week, we decided to sharpen the conjecture to the form that the
+   dot product equals the population of the intersection times the length.
+   The success of these unit tests led us months later to prove the conjecture.
+   We discuss this in the video "Finding and Solving the Hadamard Population
+   Conjecture".
+
+   Note that these tests have been tweaked to use the Hadamard class.
+   However, they are mostly otherwise unchanged.
