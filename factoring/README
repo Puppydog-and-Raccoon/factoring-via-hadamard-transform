@@ -1,0 +1,27 @@
+The code in this directory implements factoring in terms of consistency.
+
+Examples are shown in FactoringTest.java.
+Each example looks more or less like this:
+
+	consistency.Consistency consistencySolver = new consistency.NaiveConsistency()
+	Factoring factoringSolver = new Factoring(consistencySolver);
+
+	Problem problem = new Problem(productSizeInBits, productInHexadecimal);
+	Solution solution = factoringSolver.solve(problem);
+	if(solution == null) {
+		// product cannot be factored
+	} else {
+		// solution contains factors
+	}
+
+The Factoring object uses dependency injection in order to test/compare the
+various implementations of consistency solvers on equal terms.
+
+Public Classes
+ * Problem.java   - describes the number to be factored
+ * Solution.java  - describes the factors, if found
+ * Factoring.java - the factoring algorithm
+
+Internal Classes
+ * Meaning.java   - describes what each decision means in terms of factoring
+ * Utility.java   - miscellaneous functions
