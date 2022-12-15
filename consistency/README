@@ -1,0 +1,27 @@
+This directory implements consistency in three different ways.
+The algorithms have overlapping tests to increase confidence.
+Examples of how to use this are provided by the applications,
+such as factoring, garbage can packing, garbage can coloring,
+and critter circuit.
+
+External classes, for users
+ * Consistency         - common interface to all of the solvers
+ * Constraint          - identifies a pair of inconsistent decisions
+ * Problem             - wraps the problem instance
+ * NaiveConsistency    - simple exponential algorithm
+ * SlightlyLessNaiveConsistencyForFactoring - simple exponential algorithm, for factoring only
+ * HadamardConsistency - the real algorithm
+
+Internal classes, not for users
+ * Position          - describes the positions of nodes within butterflies
+ * Utility           - odds and ends
+ * EquationButterfly - part of equation butterflies
+ * EquationNode      - part of equation butterflies
+ * EquationPair      - part of equation butterflies
+ * SolutionButterfly - part of solution butterflies
+ * SolutionNode      - part of solution butterflies
+ * SolutionPair      - part of solution butterflies
+
+ 
+Note: the Equation classes could be called "TermPairs", "TermNodes", and "TermButterfly"
+ 
