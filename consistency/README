@@ -1,0 +1,51 @@
+consistency/README
+
+This package solves consistency problems.
+
+Consistency Classes -- public classes that solve consistency problems
+   ConsistencyAlgorithm   -- transmogrify consistency problems into consistency solutions
+   ConsistencyProblem     -- describes and validates a consistency problem
+   ConsistencySolution    -- describes and validates a consistency solution
+   ConsistencyState       -- the core state and logic of the consistency algorithm
+   ConsistencyConstraint  -- exactly n of m specific bits must be set
+   HadamardDomain         -- describes the hadamard domain for a butterfly node
+
+Position Classes -- describe the structure of butterflies
+   PositionNode           -- part of a position butterfly
+   PositionBox            -- part of a position butterfly
+   PositionButterfly      -- the whole butterfly
+
+Equation Classes -- model constraints in terms of hadamard butterflies
+   EquationFact           -- basic unit of dynamic programming state, used in equation nodes
+   EquationNode           -- part of an equation butterfly
+   EquationBox            -- part of an equation butterfly
+   EquationButterfly      -- models all hadamard vectors v, where fht(v) dot_product fht(c) = n
+
+Solution Classes -- each problem has one solution butterfly that embodies the intersection of all equation butterflies
+   SolutionHadamardFact   -- show how 2 child solution facts produce 2 parent solution facts
+   SolutionPopulationFact -- show how all leaf hadamards derive from the same root vector
+   SolutionSpineFact      -- show how all root hadamards derive from the same leaf vector
+   SolutionFact           -- basic unit of dynamic programming state, used in relation multimaps and solution hadamard facts
+   SolutionBox            -- part of a solution butterfly
+   SolutionButterfly      -- models all hadamard vectors v, where v satisfies all constraints
+
+RelationButterfly -- each relation butterfly connects one equation butterfly to the solution butterfly
+   RelationMultiMap       -- a multimap tailored to link equation facts to solution facts
+   RelationNode           -- part of a butterfly
+   RelationBox            -- part of a butterfly
+   RelationButterfly      -- the whole butterfly
+
+Helper Classes -- various helper classes, such as part of the dynamic programming to extract solutions
+   ButterflyOfHashSets    -- for debugging and testing
+   SupportAnswer          -- for debugging and testing
+   Unique                 -- makes sets of records unique, to save memory
+   Utility                -- public odds and ends, including Sylvester transforms
+
+Notes
+   Consistency and utility classes have public visibility.
+   All other classes have package visibility.
+   Classes are marked final, for no good reason.
+   Many more optimizations are possible and will be essential for useful implementations.
+   The term "hadamard" is an int hadamard value, anywhere.
+   The term "spine" is a canonical hadamard value in the spine tree.
+   The term "population" is a canonical hadamard value in the population tree.
