@@ -61,6 +61,34 @@ final class PositionBox {
 
 	@Override
 	public String toString() {
-		return "<PositionBox boxTier=" + boxTier + " boxTerm=" + boxTerm + ">";
+		return "<PositionBox boxTier=" + boxTier + " boxTerm=" + boxTerm + " domain=" + leftParentNode.hadamardDomain + ">";
+	}
+
+	SolutionPopulationFact[] allParentPopulationFacts(
+		final int childPopulation
+	) {
+		final int lowestParentPopulationForPosition         = leftParentNode.hadamardDomain.populationMinimum;
+		final int highestParentPopulationForPosition        = leftParentNode.hadamardDomain.populationMaximum;
+		final int lowestParentPopulationForChildPopulation  = Math.max(lowestParentPopulationForPosition,  childPopulation - highestParentPopulationForPosition);
+		final int highestParentPopulationForChildPopulation = Math.min(highestParentPopulationForPosition, childPopulation - lowestParentPopulationForPosition);
+		final int numberOfParentPopulationFacts             = highestParentPopulationForChildPopulation - lowestParentPopulationForChildPopulation + 1;
+//		Utility.insist(numberOfParentPopulationFacts >= 0, "must have positive canonicals (" + numberOfParentPopulationFacts + ") " + positionBox + " " + childPopulation);
+	
+		if(numberOfParentPopulationFacts <= 0) {
+//			System.out.println("### " + this + " " + numberOfParentPopulationFacts);
+			return new SolutionPopulationFact[0];
+		}
+//		System.out.println("### " + positionBox + " " + numberOfParentPopulationFacts);
+	
+		final SolutionPopulationFact[] parentPopulationFacts = new SolutionPopulationFact[numberOfParentPopulationFacts];
+		for(final int i : Utility.enumerateAscending(numberOfParentPopulationFacts)) {
+			Utility.insist(lowestParentPopulationForChildPopulation + i >= 0, "must be non-negative");
+			Utility.insist(lowestParentPopulationForChildPopulation <= childPopulation, "must be less than child population");
+			Utility.insist(highestParentPopulationForChildPopulation - i >= 0, "must be non-negative");
+			Utility.insist(highestParentPopulationForChildPopulation <= childPopulation, "must be less than child population");
+			parentPopulationFacts[i] = SolutionPopulationFact.newFact(lowestParentPopulationForChildPopulation + i, highestParentPopulationForChildPopulation - i);
+			Utility.insist(parentPopulationFacts[i].childPopulation() == childPopulation, "child populations must match");
+		}
+		return parentPopulationFacts;
 	}
 }

@@ -148,7 +148,7 @@ final public class Utility {
 		return count;
 	}
 
-	static <ElementType> String toStringFromSet(final Set<ElementType> elements) {
+	public static <ElementType> String toStringFromSet(final Set<ElementType> elements) {
 		final StringBuffer buffer = new StringBuffer();
 		if(elements == null) {
 			buffer.append("null");
@@ -363,6 +363,12 @@ final public class Utility {
 	}
 
 	public static boolean isEqualToAny(boolean[] a, boolean[][] bs) {
+		if(a == null && bs == null) {
+			return true;
+		}
+		if(a == null || bs == null) {
+			return false;
+		}
 		for(boolean[] b : bs) {
 			if(Arrays.equals(a, b)) {
 				return true;

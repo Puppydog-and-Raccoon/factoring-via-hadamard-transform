@@ -1,20 +1,32 @@
 package consistency;
 
+// TODO: rename fields like hadamardMinimum and populationMinimum
+// TODO: add fields like spineMinimum
+
 public class HadamardDomain {
     public final int minimum;
 	public final int maximum;
 	public final int stride;
+	public final int populationMinimum;
+	public final int populationMaximum;
+	public final int populationStride;
 
 	private static Unique<HadamardDomain> unique = new Unique<HadamardDomain>();
 
 	private HadamardDomain(
-		final int minimum,
-		final int maximum,
-		final int stride
+		final int hadamardMinimum,
+		final int hadamardMaximum,
+		final int hadamardStride,
+		final int populationMinimum,
+		final int populationMaximum,
+		final int populationStride
 	) {
-		this.minimum = minimum;
-		this.maximum = maximum;
-		this.stride  = stride;
+		this.minimum           = hadamardMinimum;
+		this.maximum           = hadamardMaximum;
+		this.stride            = hadamardStride;
+		this.populationMinimum = populationMinimum;
+		this.populationMaximum = populationMaximum;
+		this.populationStride  = populationStride;
 	}
 
 	public static HadamardDomain newDefault(
@@ -24,17 +36,9 @@ public class HadamardDomain {
 		return unique.unique(new HadamardDomain(
 			defaultMinimumForNode(tier, term),
 			defaultMaximumForNode(tier, term),
-			1
-		));
-	}
-
-	public static HadamardDomain newSpecific(
-		final int minimum,
-		final int maximum
-	) {
-		return unique.unique(new HadamardDomain(
-			minimum,
-			maximum,
+			1,
+			0,
+			1 << tier,
 			1
 		));
 	}
@@ -42,12 +46,18 @@ public class HadamardDomain {
 	public static HadamardDomain newSpecific(
 		final int minimum,
 		final int maximum,
-		final int stride
+		final int stride,
+		final int canonicalMinimum,
+		final int canonicalMaximum,
+		final int canonicalStride
 	) {
 		return unique.unique(new HadamardDomain(
 			minimum,
 			maximum,
-			stride
+			stride,
+			canonicalMinimum,
+			canonicalMaximum,
+			canonicalStride
 		));
 	}
 
@@ -61,7 +71,7 @@ public class HadamardDomain {
 		return Utility.enumerateAscending(minimum, maximum, stride);
 	}
 
-	private static int defaultMinimumForNode(
+	public static int defaultMinimumForNode(
 		final int nodeTier,
 		final int nodeTerm
 	) {
@@ -70,7 +80,7 @@ public class HadamardDomain {
 			 : -(1 << (nodeTier - 1));
 	}
 
-	private static int defaultMaximumForNode(
+	public static int defaultMaximumForNode(
 		final int nodeTier,
 		final int nodeTerm
 	) {
@@ -99,7 +109,11 @@ public class HadamardDomain {
 			for(int nodeTerm = 0; nodeTerm < numberOfTerms; nodeTerm++) {
 				hadamardDomains[nodeTier][nodeTerm] = newSpecific(
 					Math.max(defaultMinimumForNode(nodeTier, nodeTerm), -numberOfTruesInProblem),
-					Math.min(defaultMaximumForNode(nodeTier, nodeTerm),  numberOfTruesInProblem)
+					Math.min(defaultMaximumForNode(nodeTier, nodeTerm),  numberOfTruesInProblem),
+					1,
+					0,
+					Math.min(1 << nodeTier, numberOfTruesInProblem),
+					1
 				);
 			}
 		}
@@ -108,8 +122,12 @@ public class HadamardDomain {
 
 	@Override
 	public int hashCode() {
-		return Integer.rotateLeft(maximum,  0)
-			 ^ Integer.rotateLeft(minimum, 16);
+		return Integer.rotateLeft(minimum,            0)
+			 ^ Integer.rotateLeft(maximum,            5)
+			 ^ Integer.rotateLeft(stride,            10)
+			 ^ Integer.rotateLeft(populationMinimum, 15)
+			 ^ Integer.rotateLeft(populationMaximum, 20)
+			 ^ Integer.rotateLeft(populationStride,  25);
 	}
 
 	@Override
@@ -117,8 +135,24 @@ public class HadamardDomain {
 		Object otherObject
 	) {
 		return otherObject != null
-			&& getClass()  == otherObject.getClass()
-			&& maximum     == ((HadamardDomain) otherObject).maximum
-			&& minimum     == ((HadamardDomain) otherObject).minimum;
+			&& getClass()        == otherObject.getClass()
+			&& minimum           == ((HadamardDomain) otherObject).minimum
+			&& maximum           == ((HadamardDomain) otherObject).maximum
+			&& stride            == ((HadamardDomain) otherObject).stride
+			&& populationMinimum == ((HadamardDomain) otherObject).populationMinimum
+			&& populationMaximum == ((HadamardDomain) otherObject).populationMaximum
+			&& populationStride  == ((HadamardDomain) otherObject).populationStride;
+	}
+
+	@Override
+	public String toString() {
+		return "HadamardDomain ["
+				+ "minimum="           + minimum           + ", "
+				+ "maximum="           + maximum           + ", "
+				+ "stride="            + stride            + ", "
+				+ "populationMinimum=" + populationMinimum + ", "
+				+ "populationMaximum=" + populationMaximum + ", "
+				+ "populationStride="  + populationStride
+				+ "]";
 	}
 }

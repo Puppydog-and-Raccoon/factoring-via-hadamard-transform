@@ -10,8 +10,8 @@ package consistency;
 //  * from butterfly to butterfly, nodes must share hadamard, population, and spine values
 
 class SolutionPopulationFact {
-	final byte leftParentPopulation;
-	final byte rightParentPopulation;
+	final short leftParentPopulation;
+	final short rightParentPopulation;
 
 	private static final Unique<SolutionPopulationFact> unique = new Unique<SolutionPopulationFact>();
 
@@ -19,11 +19,11 @@ class SolutionPopulationFact {
 		final int leftParentPopulation,
 		final int rightParentPopulation
 	) {
-		Utility.insist(leftParentPopulation  >= Byte.MIN_VALUE && leftParentPopulation  <= Byte.MAX_VALUE, "fix types");
-		Utility.insist(rightParentPopulation >= Byte.MIN_VALUE && rightParentPopulation <= Byte.MAX_VALUE, "fix types");
+		Utility.insist(leftParentPopulation  >= Short.MIN_VALUE && leftParentPopulation  <= Short.MAX_VALUE, "fix types");
+		Utility.insist(rightParentPopulation >= Short.MIN_VALUE && rightParentPopulation <= Short.MAX_VALUE, "fix types");
 
-		this.leftParentPopulation  = (byte) leftParentPopulation;
-		this.rightParentPopulation = (byte) rightParentPopulation;
+		this.leftParentPopulation  = (short) leftParentPopulation;
+		this.rightParentPopulation = (short) rightParentPopulation;
 	}
 
 	int childPopulation() {
@@ -38,27 +38,6 @@ class SolutionPopulationFact {
 			leftParentPopulation,
 			rightParentPopulation
 		));
-	}
-
-	public static SolutionPopulationFact[] allParentPopulationFacts(
-		final int boxTier,
-		final int childPopulation
-	) {
-		final int lowestParentPopulationForPosition         = 0;
-		final int highestParentPopulationForPosition        = 1 << boxTier;
-		final int lowestParentPopulationForChildPopulation  = Math.max(lowestParentPopulationForPosition,  childPopulation - highestParentPopulationForPosition);
-		final int highestParentPopulationForChildPopulation = Math.min(highestParentPopulationForPosition, childPopulation - lowestParentPopulationForPosition);
-		final int numberOfParentPopulationFacts             = highestParentPopulationForChildPopulation - lowestParentPopulationForChildPopulation + 1;
-
-		final SolutionPopulationFact[] parentPopulationFacts = new SolutionPopulationFact[numberOfParentPopulationFacts];
-		for(final int i : Utility.enumerateAscending(numberOfParentPopulationFacts)) {
-			Utility.insist(lowestParentPopulationForChildPopulation + i >= 0, "must be non-negative");
-			Utility.insist(lowestParentPopulationForChildPopulation <= childPopulation, "must be less than child population");
-			Utility.insist(highestParentPopulationForChildPopulation - i >= 0, "must be non-negative");
-			Utility.insist(highestParentPopulationForChildPopulation <= childPopulation, "must be less than child population");
-			parentPopulationFacts[i] = new SolutionPopulationFact(lowestParentPopulationForChildPopulation + i, highestParentPopulationForChildPopulation - i);
-		}
-		return parentPopulationFacts;
 	}
 
 	@Override

@@ -43,8 +43,8 @@ class RelationBox {
 					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
 						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
 							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
+								if(SolutionFact.couldMakeValidParents(leftChildSolutionFact, rightChildSolutionFact)) {
+									for(final SolutionPopulationFact parentPopulationFact : positionBox.allParentPopulationFacts(leftChildSolutionFact.population)) {
 										final SolutionFact leftParentSolutionFact = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										validLeftParentRelationMultiMap.add(leftParentEquationFact, leftParentSolutionFact);
@@ -75,8 +75,8 @@ class RelationBox {
 					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
 						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
 							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
+								if(SolutionFact.couldMakeValidParents(leftChildSolutionFact, rightChildSolutionFact)) {
+									for(final SolutionPopulationFact parentPopulationFact : positionBox.allParentPopulationFacts(leftChildSolutionFact.population)) {
 										final SolutionFact leftParentSolutionFact  = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										if(leftParentNode.relationMultiMap.contains(leftParentEquationFact, leftParentSolutionFact)
@@ -110,8 +110,8 @@ class RelationBox {
 					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
 						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
 							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
+								if(SolutionFact.couldMakeValidParents(leftChildSolutionFact, rightChildSolutionFact)) {
+									for(final SolutionPopulationFact parentPopulationFact : positionBox.allParentPopulationFacts(leftChildSolutionFact.population)) {
 										final SolutionFact leftParentSolutionFact  = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										if(leftParentNode.relationMultiMap.contains(leftParentEquationFact, leftParentSolutionFact)
@@ -160,8 +160,11 @@ class RelationBox {
 	// for solution butterflies
 
 	// IMPORTANT
+	// RENAME "equation"
 	boolean fillSolutionBoxesFromEquationBoxes() {
-		final SolutionBox validSolutionBox = new SolutionBox(positionBox);
+		final SolutionBox           validSolutionBox              = new SolutionBox(positionBox);
+		final HashSet<SolutionFact> validLeftParentSolutionFacts  = new HashSet<SolutionFact>();
+		final HashSet<SolutionFact> validRightParentSolutionFacts = new HashSet<SolutionFact>();
 
 		for(final EquationFact leftChildEquationFact : leftChildNode.relationMultiMap.allEquationFacts()) {
 			for(final EquationFact rightChildEquationFact : rightChildNode.relationMultiMap.allEquationFacts()) {
@@ -171,11 +174,15 @@ class RelationBox {
 					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
 						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
 							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
+								if(SolutionFact.couldMakeValidParents(leftChildSolutionFact, rightChildSolutionFact)) {
+									for(final SolutionPopulationFact parentPopulationFact : positionBox.allParentPopulationFacts(leftChildSolutionFact.population)) {
 										final SolutionHadamardFact hadamardRelationFact = SolutionHadamardFact.newFact(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										final SolutionSpineFact spineRelationFact = SolutionSpineFact.newFact(leftChildSolutionFact, rightChildSolutionFact);
+										final SolutionFact leftParentSolutionFact = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
+										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										validSolutionBox.add(hadamardRelationFact, spineRelationFact, parentPopulationFact);
+										validLeftParentSolutionFacts.add(leftParentSolutionFact);
+										validRightParentSolutionFacts.add(rightParentSolutionFact);
 									}
 								}
 							}
@@ -186,89 +193,9 @@ class RelationBox {
 		}
 
 		final boolean solutionBoxChanged = solutionBox.addAll(validSolutionBox);
+		final boolean a = solutionBox.leftParentNode.solutionFacts.addAll(validLeftParentSolutionFacts);
+		final boolean b = solutionBox.rightParentNode.solutionFacts.addAll(validRightParentSolutionFacts);
 		return solutionBoxChanged;
-	}
-
-	// IMPORTANT
-	public boolean stripEverythingUpSolution() {
-		final SolutionBox      validSolutionBox                 = new SolutionBox(positionBox);
-		final RelationMultiMap validLeftParentRelationMultiMap  = new RelationMultiMap();
-		final RelationMultiMap validRightParentRelationMultiMap = new RelationMultiMap();
-
-		for(final EquationFact leftChildEquationFact : leftChildNode.relationMultiMap.allEquationFacts()) {
-			for(final EquationFact rightChildEquationFact : rightChildNode.relationMultiMap.allEquationFacts()) {
-				if(wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact)) {
-					final EquationFact leftParentEquationFact = EquationFact.newLeftParent(leftChildEquationFact, rightChildEquationFact);
-					final EquationFact rightParentEquationFact = EquationFact.newRightParent(leftChildEquationFact, rightChildEquationFact);
-					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
-						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
-							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
-										final SolutionHadamardFact solutionHadamardFact = SolutionHadamardFact.newFact(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										final SolutionSpineFact spineRelationFact = SolutionSpineFact.newFact(leftChildSolutionFact, rightChildSolutionFact);
-										final SolutionFact leftParentSolutionFact = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										if(solutionBox.contains(solutionHadamardFact, spineRelationFact, parentPopulationFact)
-										&& parentNodesContain(leftParentSolutionFact, rightParentSolutionFact)) {
-											validSolutionBox.add(solutionHadamardFact, spineRelationFact, parentPopulationFact);
-											validLeftParentRelationMultiMap.add(leftParentEquationFact, leftParentSolutionFact);
-											validRightParentRelationMultiMap.add(rightParentEquationFact, rightParentSolutionFact);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		final boolean solutionBoxChanged = solutionBox.retainAll(validSolutionBox);
-		final boolean leftParentChanged  = leftParentNode.relationMultiMap.retainAll(validLeftParentRelationMultiMap);
-		final boolean rightParentChanged = rightParentNode.relationMultiMap.retainAll(validRightParentRelationMultiMap);
-		return solutionBoxChanged || leftParentChanged || rightParentChanged;
-	}
-
-	// IMPORTANT
-	public boolean stripEverythingDownSolution() {
-		final SolutionBox      validSolutionBox                = new SolutionBox(positionBox);
-		final RelationMultiMap validLeftChildRelationMultiMap  = new RelationMultiMap();
-		final RelationMultiMap validRightChildRelationMultiMap = new RelationMultiMap();
-
-		for(final EquationFact leftChildEquationFact : leftChildNode.relationMultiMap.allEquationFacts()) {
-			for(final EquationFact rightChildEquationFact : rightChildNode.relationMultiMap.allEquationFacts()) {
-				if(wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact)) {
-					final EquationFact leftParentEquationFact = EquationFact.newLeftParent(leftChildEquationFact, rightChildEquationFact);
-					final EquationFact rightParentEquationFact = EquationFact.newRightParent(leftChildEquationFact, rightChildEquationFact);
-					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
-						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
-							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
-										final SolutionHadamardFact solutionHadamardFact = SolutionHadamardFact.newFact(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										final SolutionSpineFact solutionSpineFact = SolutionSpineFact.newFact(leftChildSolutionFact, rightChildSolutionFact);
-										final SolutionFact leftParentSolutionFact = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										final SolutionFact rightParentSolutionFact = SolutionFact.newRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
-										if(solutionBox.contains(solutionHadamardFact, solutionSpineFact, parentPopulationFact)
-										&& parentNodesContain(leftParentSolutionFact, rightParentSolutionFact)) {
-											validSolutionBox.add(solutionHadamardFact, solutionSpineFact, parentPopulationFact);
-											validLeftChildRelationMultiMap.add(leftChildEquationFact, leftChildSolutionFact);
-											validRightChildRelationMultiMap.add(rightChildEquationFact, rightChildSolutionFact);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		final boolean solutionBoxChanged = solutionBox.retainAll(validSolutionBox);
-		final boolean leftChildChanged   = leftChildNode.relationMultiMap.retainAll(validLeftChildRelationMultiMap);
-		final boolean rightChildChanged  = rightChildNode.relationMultiMap.retainAll(validRightChildRelationMultiMap);
-		return solutionBoxChanged || leftChildChanged || rightChildChanged;
 	}
 
 	public boolean intersectEverythingBothRelation() {
@@ -286,8 +213,8 @@ class RelationBox {
 					if(equationBox.arePresentInParentNodes(leftParentEquationFact, rightParentEquationFact)) {
 						for(final SolutionFact leftChildSolutionFact : leftChildNode.relationMultiMap.solutionFactsFor(leftChildEquationFact)) {
 							for(final SolutionFact rightChildSolutionFact : rightChildNode.relationMultiMap.solutionFactsFor(rightChildEquationFact)) {
-								if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
-									for(final SolutionPopulationFact parentPopulationFact : SolutionPopulationFact.allParentPopulationFacts(positionBox.boxTier, leftChildSolutionFact.population)) {
+								if(SolutionFact.couldMakeValidParents(leftChildSolutionFact, rightChildSolutionFact)) {
+									for(final SolutionPopulationFact parentPopulationFact : positionBox.allParentPopulationFacts(leftChildSolutionFact.population)) {
 										final SolutionHadamardFact solutionHadamardFact = SolutionHadamardFact.newFact(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
 										final SolutionSpineFact solutionSpineFact = SolutionSpineFact.newFact(leftChildSolutionFact, rightChildSolutionFact);
 										final SolutionFact leftParentSolutionFact = SolutionFact.newLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationFact);
@@ -336,15 +263,6 @@ class RelationBox {
 		return (leftChildEquationFact.hadamard & 1) == (rightChildEquationFact.hadamard & 1);
 	}
 
-	boolean wouldMakeValidParentSolutionFacts(
-		final SolutionFact leftChildSolutionFact,
-		final SolutionFact rightChildSolutionFact
-	) {
-		return (leftChildSolutionFact.hadamard & 1) == (rightChildSolutionFact.hadamard & 1)
-			&& (leftChildSolutionFact.spine & 1) == (rightChildSolutionFact.spine & 1)
-			&& leftChildSolutionFact.population == rightChildSolutionFact.population;
-	}
-
 	public boolean rippleUpEquation(
 		final SupportAnswer                     supportAnswer,
 		final ButterflyOfHashSets<EquationFact> equationAnswer
@@ -378,6 +296,10 @@ class RelationBox {
 		return solutionBox.assignRandomSpineSupport();
 	}
 
+	boolean assignSpecificSpineSupport(final SolutionSpineFact specificSpineSupport) {
+		return solutionBox.assignSpecificSpineSupport(specificSpineSupport);
+	}
+
 	@Override
 	public String toString() {
 		return "SolutionBox ["
@@ -388,5 +310,9 @@ class RelationBox {
 //			 + "leftChildNode="   + leftChildNode   + ", "
 //			 + "rightChildNode="  + rightChildNode
 			 + "]";
+	}
+
+	public boolean intersectEverythingBothRelationXXX() {
+		return solutionBox.intersectEverythingBothRelationsXXX();
 	}
 }

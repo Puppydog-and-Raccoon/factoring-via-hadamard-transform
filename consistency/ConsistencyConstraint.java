@@ -45,6 +45,10 @@ public final class ConsistencyConstraint {
 		return numberOfTruesInConstraint * numberOfDecisionsInProblem;
 	}
 
+	public boolean isConstant() {
+		return numberOfTruesInConstraint == 0 || numberOfTruesInConstraint == sortedAndUniqueDecisionIds.length;
+	}
+
 	@Override
 	public String toString() {
 		return "[Constraint: " + numberOfTruesInConstraint + " of " + Arrays.toString(sortedAndUniqueDecisionIds) + " in " + numberOfDecisionsInProblem + "]";
@@ -95,11 +99,11 @@ public final class ConsistencyConstraint {
 	}
 
 	public static ConsistencyConstraint exactlyZeroOfOne(
-		final int decisionId0,
+		final int decisionId,
 		final int numberOfDecisionsInProblem
 	) {
 		final int   numbersOfTrues = 0;
-		final int[] decisionIds    = new int[]{decisionId0};
+		final int[] decisionIds    = new int[]{decisionId};
 		return unique.unique(new ConsistencyConstraint(numbersOfTrues, decisionIds, numberOfDecisionsInProblem));
 	}
 
@@ -158,7 +162,10 @@ public final class ConsistencyConstraint {
 		final int numberOfDecisionsInProblem
 	) {
 		final int numberOfTrues = m;
-		final int[] decisionIds  = Utility.enumerateAscending(n);
+		final int[] decisionIds = new int[n];
+		for(int i = 0; i < n; i++) {
+			decisionIds[i] = i;
+		}
 		return unique.unique(new ConsistencyConstraint(numberOfTrues, decisionIds, numberOfDecisionsInProblem));
 	}
 }

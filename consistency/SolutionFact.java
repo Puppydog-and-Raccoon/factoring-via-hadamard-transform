@@ -3,9 +3,9 @@ package consistency;
 // NOTE: hadamards can have same or different parities from spines and/or populations, consider (3+1)/2 and (3-1)/2
 
 class SolutionFact {
-	final byte hadamard;
-	final byte spine;
-	final byte population;
+	final short hadamard;
+	final short spine;
+	final short population;
 
 	private static final Unique<SolutionFact> unique = new Unique<SolutionFact>();
 
@@ -14,13 +14,13 @@ class SolutionFact {
 		final int spine,
 		final int population
 	) {
-		Utility.insist(hadamard   >= Byte.MIN_VALUE  && hadamard   <= Byte.MAX_VALUE, "fix types");
-		Utility.insist(spine      >= Byte.MIN_VALUE  && spine      <= Byte.MAX_VALUE, "fix types");
-		Utility.insist(population >= Byte.MIN_VALUE  && population <= Byte.MAX_VALUE, "fix types");
+		Utility.insist(hadamard   >= Short.MIN_VALUE  && hadamard   <= Short.MAX_VALUE, "fix types");
+		Utility.insist(spine      >= Short.MIN_VALUE  && spine      <= Short.MAX_VALUE, "fix types");
+		Utility.insist(population >= Short.MIN_VALUE  && population <= Short.MAX_VALUE, "fix types");
 
-		this.hadamard   = (byte)hadamard;
-		this.spine      = (byte)spine;
-		this.population = (byte)population;
+		this.hadamard   = (short)hadamard;
+		this.spine      = (short)spine;
+		this.population = (short)population;
 	}
 
 	// NOTE: this does not check domain

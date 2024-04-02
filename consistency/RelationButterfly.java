@@ -123,6 +123,17 @@ public class RelationButterfly {
 		return relationButterfly;
 	}
 
+	void assignSolutionFacts() {
+		for(final int nodeTier : positionButterfly.nodeTierIndicesTopDown) {
+			for(final int nodeTerm : positionButterfly.nodeTermIndices) {
+				final SolutionNode solutionNode = solutionButterfly.solutionNodes[nodeTier][nodeTerm];
+				final RelationNode relationNode = relationNodes[nodeTier][nodeTerm];
+				solutionNode.solutionFacts.clear();
+				solutionNode.solutionFacts.addAll(relationNode.relationMultiMap.getAllSolutionFacts());
+			}
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "RelationButterfly ["
@@ -131,5 +142,49 @@ public class RelationButterfly {
 			 + "relationNodes="     + Utility.toString(relationNodes) + ",\n"
 			 + "relationBoxes="     + Utility.toString(relationBoxes)
 			 + "]";
+	}
+
+	private boolean wringRelationOnceXXX() {
+		boolean anythingChanged = false;
+		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
+			for(final int boxTerm : positionButterfly.boxTermIndices) {
+				final RelationBox relationBox = relationBoxes[boxTier][boxTerm];
+				final boolean boxChanged = relationBox.intersectEverythingBothRelation();
+				anythingChanged = anythingChanged || boxChanged;
+			}
+			{
+				final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
+				anythingChanged = anythingChanged || transformChanged;
+			}
+		}
+		for(final int boxTier : positionButterfly.boxTierIndicesTopDown) {
+			for(final int boxTerm : positionButterfly.boxTermIndices) {
+				final RelationBox relationBox = relationBoxes[boxTier][boxTerm];
+				final boolean boxChanged = relationBox.intersectEverythingBothRelation();
+				anythingChanged = anythingChanged || boxChanged;
+			}
+			{
+				final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
+				anythingChanged = anythingChanged || transformChanged;
+			}
+		}
+		return anythingChanged;
+	}
+
+	void wringRelationUntilNoChangeXXX() {
+		while(wringRelationOnceXXX()) {
+		}
+	}
+
+	boolean unionRelationXXX() {
+		boolean anythingChanged = false;
+		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
+			for(final int boxTerm : positionButterfly.boxTermIndices) {
+				final RelationBox relationBox = relationBoxes[boxTier][boxTerm];
+				final boolean boxChanged = relationBox.fillSolutionBoxesFromEquationBoxes();
+				anythingChanged = anythingChanged || boxChanged;
+			}
+		}
+		return anythingChanged;
 	}
 }

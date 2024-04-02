@@ -4,68 +4,80 @@ import java.util.Arrays;
 import java.util.Vector;
 
 public class ConsistencyState {
-	private final ConsistencyProblem  consistencyProblem;
-	private final PositionButterfly   positionButterfly;
-	private final SolutionButterfly   solutionButterfly;
-	private final EquationButterfly[] equationButterflies;
-	private final RelationButterfly[] relationButterflies;
+	private final ConsistencyProblem        consistencyProblem;
+	private final PositionButterfly         positionButterfly;
+	private final SolutionButterfly         solutionButterfly;
+	private final Vector<EquationButterfly> equationButterflies;
+	private final Vector<RelationButterfly> relationButterflies;
 
 	ConsistencyState(
 		final ConsistencyProblem consistencyProblem
 	) {
-		final PositionButterfly   positionButterfly   = new PositionButterfly(consistencyProblem.numberOfDecisionsInProblem, consistencyProblem.hadamardDomains);
-		final SolutionButterfly   solutionButterfly   = new SolutionButterfly(positionButterfly);
-		final EquationButterfly[] equationButterflies = newEquationButterflies(consistencyProblem, positionButterfly);
-		final RelationButterfly[] relationButterflies = newRelationButterflies(equationButterflies, solutionButterfly);
+		final PositionButterfly         positionButterfly   = new PositionButterfly(consistencyProblem.numberOfDecisionsInProblem, consistencyProblem.hadamardDomains);
+		final SolutionButterfly         solutionButterfly   = new SolutionButterfly(positionButterfly, consistencyProblem);
+		final Vector<EquationButterfly> equationButterflies = new Vector<EquationButterfly>();
+		final Vector<RelationButterfly> relationButterflies = new Vector<RelationButterfly>();
 
 		this.consistencyProblem  = consistencyProblem;
 		this.positionButterfly   = positionButterfly;
 		this.solutionButterfly   = solutionButterfly;
 		this.equationButterflies = equationButterflies;
 		this.relationButterflies = relationButterflies;
+
+		fillEquationButterflies();
+		fillRelationButterflies();
 	}
 
-	private static EquationButterfly[] newEquationButterflies(
-		final ConsistencyProblem consistencyProblem,
-		final PositionButterfly  positionButterfly
-	) {
-		final Vector<EquationButterfly> equationButterflies = new Vector<EquationButterfly>();
+	private void fillEquationButterflies() {
+		int i = 0;
 		for(final ConsistencyConstraint consistencyConstraint : consistencyProblem.consistencyConstraints) {
-			final EquationButterfly newEquationButterfly = new EquationButterfly(positionButterfly, consistencyConstraint, consistencyProblem.numberOfTruesInProblem);
-			newEquationButterfly.fill();
-			equationButterflies.add(newEquationButterfly);
-		}		
-		return equationButterflies.toArray(new EquationButterfly[0]);
+			if(!consistencyConstraint.isConstant()) {
+				System.out.println("making equation butterfly for " + consistencyConstraint + " " + i++ + "/" + consistencyProblem.consistencyConstraints.size());
+				final EquationButterfly newEquationButterfly = new EquationButterfly(positionButterfly, consistencyConstraint, consistencyProblem.numberOfTruesInProblem);
+				newEquationButterfly.fill(consistencyProblem.consistencyConstraints);
+				equationButterflies.add(newEquationButterfly);
+			}
+		}
 	}
 
-	private static RelationButterfly[] newRelationButterflies(
-		final EquationButterfly[] equationButterflies,
-		final SolutionButterfly   solutionButterfly
-	) {
-		final Vector<RelationButterfly> relationButterflies = new Vector<RelationButterfly>();
+	private void fillRelationButterflies() {
+		int i = 0;
 		for(final EquationButterfly equationButterfly : equationButterflies) {
+			System.out.println("making relation butterfly for " + equationButterfly.consistencyConstraint + " " + i++ + "/" + equationButterflies.size());
 			final RelationButterfly newRelationButterfly = new RelationButterfly(equationButterfly, solutionButterfly);
 			newRelationButterfly.fillRelationUp();
 			newRelationButterfly.wringRelationDown();
 			relationButterflies.add(newRelationButterfly);
+			if(i == 1) {
+				fillSolutionButterfly();
+			} else {
+				wringUntilNoChange();
+			}
 		}
-		return relationButterflies.toArray(new RelationButterfly[0]);
 	}
 
-	// TODO: rename variables
-	boolean fillAllRelationsUp() {
+	boolean fillSolutionButterfly() {
 		boolean anythingChanged = false;
+		{
+			boolean saturateChanged = solutionButterfly.saturateSolutionLeaves();
+			anythingChanged = anythingChanged || saturateChanged;
+		}
 		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
-			final boolean fillUpChanged    = applyBoxTierFirstRelationButterflyOnce(         boxTier, relationBox -> relationBox.fillSolutionBoxesFromEquationBoxes());
-			final boolean stripUpChanged   = applyBoxTierAllRelationButterfliesUntilNoChange(boxTier, relationBox -> relationBox.stripEverythingUpSolution());
-			final boolean transformChanged = transform(boxTier);
-			anythingChanged = anythingChanged || fillUpChanged || stripUpChanged || transformChanged;
+			final boolean fillUpChanged    = applyBoxTierFirstRelationButterflyOnce(boxTier);
+			anythingChanged = anythingChanged || fillUpChanged;
+		}
+		System.out.println("aaa " + solutionButterfly.status());
+		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
+			final boolean stripUpChanged   = intersectBoxTierAllButterfliesUntilNoChange(boxTier);
+			final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
+			anythingChanged = anythingChanged || stripUpChanged || transformChanged;
 		}
 		for(final int boxTier : positionButterfly.boxTierIndicesTopDown) {
-			final boolean stripDownChanged = applyBoxTierAllRelationButterfliesUntilNoChange(boxTier, relationBox -> relationBox.stripEverythingDownSolution());
-			final boolean transformChanged = transform(boxTier);
+			final boolean stripDownChanged = intersectBoxTierAllButterfliesUntilNoChange(boxTier);
+			final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
 			anythingChanged = anythingChanged || stripDownChanged || transformChanged;
 		}
+		System.out.println("bbb " + solutionButterfly.status());
 		return anythingChanged;
 	}
 
@@ -74,126 +86,41 @@ public class ConsistencyState {
 		}
 	}
 
-	private boolean wringOnce() {
+	boolean wringOnce() {
+		System.out.println("wring");
 		boolean anythingChanged = false;
 		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
-			final boolean thisChanged = applyBoxTierAllRelationButterfliesUntilNoChange(boxTier, relationBox -> relationBox.stripEverythingUpSolution());
-			final boolean transformChanged = transform(boxTier);
+			final boolean thisChanged = intersectBoxTierAllButterfliesUntilNoChange(boxTier);
+			final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
 			anythingChanged = anythingChanged || thisChanged || transformChanged;
 		}
 		for(final int boxTier : positionButterfly.boxTierIndicesTopDown) {
-			final boolean thisChanged = applyBoxTierAllRelationButterfliesUntilNoChange(boxTier, relationBox -> relationBox.stripEverythingDownSolution());
-			final boolean transformChanged = transform(boxTier);
+			final boolean thisChanged = intersectBoxTierAllButterfliesUntilNoChange(boxTier);
+			final boolean transformChanged = solutionButterfly.wringTierBothDirections(boxTier);
 			anythingChanged = anythingChanged || thisChanged || transformChanged;
 		}
 		return anythingChanged;
-	}
-
-	private boolean transform(final int boxTier) {
-		final int spineSize = 1 << boxTier;
-		final int populationSize = positionButterfly.numberOfBoxTerms / spineSize;
-		return transform(boxTier, 0, spineSize, 0, populationSize);
-	}
-
-	// TODO; rename
-	// don't need union because already filled - intersect
-	private boolean transform(
-		final int boxTier,
-		final int spineStart,
-		final int spineSize,
-		final int populationStart,
-		final int populationSize
-	) {
-		boolean anythingChanged = false;
-		if(spineSize == 1) {
-			// TODO: make area intersect
-			// intersect along population - intersect along spine is implicit
-			for(int i = 0; i < populationSize; i++) {
-				final PositionBox positionBox = getBox(boxTier, spineStart, populationStart + i);
-				final boolean thisChanged = doBoxIntersect(positionBox);
-				anythingChanged = anythingChanged || thisChanged;
-			}
-		} else if(populationSize == 1) {
-			// TODO: make area intersect
-			// intersect along spine - intersect along population is implicit
-			for(int i = 0; i < spineSize; i++) {
-				final PositionBox positionBox = getBox(boxTier, spineStart + i, populationStart);
-				final boolean thisChanged = doBoxIntersect(positionBox);
-				anythingChanged = anythingChanged || thisChanged;
-			}
-		} else {
-			transform(boxTier, spineStart,                 spineSize / 2, populationStart,                      populationSize / 2);
-			transform(boxTier, spineStart,                 spineSize / 2, populationStart + populationSize / 2, populationSize / 2);
-			transform(boxTier, spineStart + spineSize / 2, spineSize / 2, populationStart,                      populationSize / 2);
-			transform(boxTier, spineStart + spineSize / 2, spineSize / 2, populationStart + populationSize / 2, populationSize / 2);
-			// by spine
-			final boolean a = doAreaIntersect(boxTier, spineStart, spineSize / 2, populationStart, populationSize);
-			// by population
-			final boolean b = doAreaIntersect(boxTier, spineStart, spineSize, populationStart, populationSize);
-			// by spine
-			final boolean c = doAreaIntersect(boxTier, spineStart + spineSize / 2, spineSize / 2, populationStart, populationSize);
-			// by population
-			final boolean d = doAreaIntersect(boxTier, spineStart, spineSize, populationStart, populationSize);
-			// by spine
-			final boolean e = doAreaIntersect(boxTier, spineStart, spineSize / 2, populationStart, populationSize);
-			anythingChanged = anythingChanged || a || b || c || d || e;
-		}
-		return anythingChanged;
-	}
-
-	// this works, whether we are doing by spine or by population
-	private boolean doAreaIntersect(
-		final int boxTier,
-		final int spineStart,
-		final int spineSize,
-		final int populationStart,
-		final int populationSize
-	) {
-		boolean anythingChanged = false;
-		// first pass computes the canonical intersections
-		for(int s = 0; s < spineSize; s++) {
-			for(int p = 0; p < populationSize; p++) {
-				final PositionBox positionBox = getBox(boxTier, spineStart + s, populationStart + p);
-				final boolean thisChanged = doBoxIntersect(positionBox);
-				anythingChanged = anythingChanged || thisChanged;
-			}
-		}
-		// second pass computes the support intersections
-		for(int s = 0; s < spineSize; s++) {
-			for(int p = 0; p < populationSize; p++) {
-				final PositionBox positionBox = getBox(boxTier, spineStart + s, populationStart + p);
-				final boolean thisChanged = doBoxIntersect(positionBox);
-				anythingChanged = anythingChanged || thisChanged;
-			}
-		}
-		return anythingChanged;
-	}
-
-	private boolean doBoxIntersect(final PositionBox positionBox) {
-		boolean anythingChanged = false;
-		for(final int relationButterflyIndex : Utility.enumerateAscending(relationButterflies.length)) {
-			final RelationBox relationBox = relationButterflies[relationButterflyIndex].getBox(positionBox);
-			final boolean thisBoxChanged = relationBox.intersectEverythingBothRelation();
-			anythingChanged = anythingChanged || thisBoxChanged;
-		}
-		return anythingChanged;
-	}
-
-	private PositionBox getBox(int boxTier, int i, int j) {
-		final int numberOfSpines = 1 << boxTier;
-		final int boxTerm = i + numberOfSpines * j;
-		return positionButterfly.positionBoxes[boxTier][boxTerm];
 	}
 
 	void chooseSpineSolutionsDown() {
-		for(final int boxTier : positionButterfly.boxTierIndicesTopDown) {
-			for(final int boxTerm : positionButterfly.boxTermIndices) {
-				final RelationBox relationBox = relationButterflies[0].relationBoxes[boxTier][boxTerm];
-				if(relationBox.positionBox.isSpineTermBox()) {
-					relationBox.assignRandomSpineSupport();
-					wringUntilNoChange();
-				}
-			}
+		for(ConsistencyConstraint constraint : consistencyProblem.consistencyConstraints) {
+			System.out.println(" ccc " + constraint);
+		}
+		chooseSpineSolutionsDown(0, 0);
+	}
+
+	void chooseSpineSolutionsDown(
+		final int boxTier,
+		final int boxTerm
+	) {
+		final RelationBox relationBox = relationButterflies.get(0).relationBoxes[boxTier][boxTerm];
+		final boolean changed = relationBox.assignRandomSpineSupport();
+		if(changed) {
+			wringUntilNoChange();
+		}
+		if(boxTier < positionButterfly.numberOfBoxTiers - 1) {
+			chooseSpineSolutionsDown(boxTier + 1, boxTerm);
+			chooseSpineSolutionsDown(boxTier + 1, boxTerm + (1 << boxTier));
 		}
 	}
 
@@ -212,21 +139,21 @@ public class ConsistencyState {
 		Utility.insist(rootHadamards.length == positionButterfly.numberOfNodeTerms, "vector is wrong size: " + rootHadamards.length + " != " + positionButterfly.numberOfBoxTerms);
 
 		final SupportAnswer supportAnswer = new SupportAnswer(positionButterfly, rootHadamards);
-		final Vector<ButterflyOfHashSets<EquationFact>> equationAnswers = ButterflyOfHashSets.vectorOfButterflies(positionButterfly, relationButterflies.length);
+		final Vector<ButterflyOfHashSets<EquationFact>> equationAnswers = ButterflyOfHashSets.vectorOfButterflies(positionButterfly, equationButterflies.size());
 
 		// fill up leaves
 		for(final int leafNodeTerm : positionButterfly.nodeTermIndices) {
-			for(final int relationButterflyIndex : Utility.enumerateAscending(relationButterflies.length)) {
-				final RelationNode relationNode = relationButterflies[relationButterflyIndex].relationNodes[positionButterfly.leafNodeTier][leafNodeTerm];
+			for(final int relationButterflyIndex : Utility.enumerateAscending(equationButterflies.size())) {
+				final RelationNode relationNode = relationButterflies.get(relationButterflyIndex).relationNodes[positionButterfly.leafNodeTier][leafNodeTerm];
 				boolean xxx = relationNode.rippleUpEquation(supportAnswer, equationAnswers.get(relationButterflyIndex));
 			}
 		}
 
 		// fill up tiers
 		for(final int boxTier : positionButterfly.boxTierIndicesBottomUp) {
-			for(final int relationButterflyIndex : Utility.enumerateAscending(relationButterflies.length)) {
+			for(final int relationButterflyIndex : Utility.enumerateAscending(equationButterflies.size())) {
 				for(final int boxTerm : positionButterfly.boxTermIndices) {
-					final RelationBox relationBox = relationButterflies[relationButterflyIndex].relationBoxes[boxTier][boxTerm];
+					final RelationBox relationBox = relationButterflies.get(relationButterflyIndex).relationBoxes[boxTier][boxTerm];
 					boolean xxx = relationBox.rippleUpEquation(supportAnswer, equationAnswers.get(relationButterflyIndex));
 				}
 			}
@@ -240,32 +167,26 @@ public class ConsistencyState {
 		return allAreValid;
 	}
 
-	private interface RelationBoxOperation {
-		boolean operation(final RelationBox relationBox);
-	}
-
 	private boolean applyBoxTierFirstRelationButterflyOnce(
-		final int                  boxTier,
-		final RelationBoxOperation relationBoxOperation
+		final int boxTier
 	) {
 		boolean anythingChanged = false;
 		for(final int boxTerm : positionButterfly.boxTermIndices) {
-			if(relationButterflies.length > 0) {
-				final RelationBox relationBox = relationButterflies[0].relationBoxes[boxTier][boxTerm];
-				final boolean thisChanged = relationBoxOperation.operation(relationBox);
+			if(equationButterflies.size() > 0) {
+				final RelationBox relationBox = relationButterflies.get(0).relationBoxes[boxTier][boxTerm];
+				final boolean thisChanged = relationBox.fillSolutionBoxesFromEquationBoxes();
 				anythingChanged = anythingChanged || thisChanged;
 			}
 		}
 		return anythingChanged;
 	}
 
-	private boolean applyBoxTierAllRelationButterfliesUntilNoChange(
-		final int                  boxTier,
-		final RelationBoxOperation relationBoxOperation
+	private boolean intersectBoxTierAllButterfliesUntilNoChange(
+		final int boxTier
 	) {
 		boolean anythingChanged = false;
 		while(true) {
-			final boolean thisChanged = applyBoxTierAllRelationButterfliesOnce(boxTier, relationBoxOperation);
+			final boolean thisChanged = intersectBoxTierAllButterfliesOnce(boxTier);
 			anythingChanged = anythingChanged || thisChanged;
 			if(!thisChanged) {
 				break;
@@ -275,15 +196,14 @@ public class ConsistencyState {
 	}
 
 	// return true if and only if any box changed
-	private boolean applyBoxTierAllRelationButterfliesOnce(
-		final int                  boxTier,
-		final RelationBoxOperation relationBoxOperation
+	private boolean intersectBoxTierAllButterfliesOnce(
+		final int boxTier
 	) {
 		boolean anyBoxChanged = false;
 		for(final int boxTerm : positionButterfly.boxTermIndices) {
-			for(final int relationButterflyIndex : Utility.enumerateAscending(relationButterflies.length)) {
-				final RelationBox relationBox = relationButterflies[relationButterflyIndex].relationBoxes[boxTier][boxTerm];
-				final boolean thisBoxChanged = relationBoxOperation.operation(relationBox);
+			for(final int relationButterflyIndex : Utility.enumerateAscending(relationButterflies.size())) {
+				final RelationBox relationBox = relationButterflies.get(relationButterflyIndex).relationBoxes[boxTier][boxTerm];
+				final boolean thisBoxChanged = relationBox.intersectEverythingBothRelation();
 				anyBoxChanged = anyBoxChanged || thisBoxChanged;
 			}
 		}
@@ -372,9 +292,10 @@ public class ConsistencyState {
 
 	void solve() {
 //		validateAllAnswersAllEquationButterflies(); // debug
-		fillAllRelationsUp();
+		fillSolutionButterfly();
 //		validateAllAnswers(); // debug
 		wringUntilNoChange();
+//		System.out.println("rrr " + solutionButterfly.status()); // debug
 	}
 
 	@Override

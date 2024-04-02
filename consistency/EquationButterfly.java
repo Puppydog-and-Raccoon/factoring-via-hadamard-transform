@@ -1,5 +1,7 @@
 package consistency;
 
+import java.util.HashSet;
+
 // TODO: use "index" suffix
 // TODO: public
 
@@ -26,12 +28,14 @@ final class EquationButterfly {
 //		System.out.println("**** number of trues = " + numberOfTruesInProblem);
 	}
 
-	void fill() {
+	void fill(
+		final HashSet<ConsistencyConstraint> consistencyConstraints
+	) {
 		fillLeaves();
 		fillParents();
-		stripRootNodes();
-		stripPopulationNode();
-//		System.out.println(this);
+		stripTotalSum();
+		stripNumberOfTruesInProblem();
+		stripConstantConstraints(consistencyConstraints);
 		wringBoxesUntilNoChange();
 	}
 
@@ -69,14 +73,14 @@ final class EquationButterfly {
 		return anyBoxChanged;
 	}
 
-	void stripRootNodes() {
+	void stripTotalSum() {
 		final EquationNode[] rootNodes = equationNodes[0];
 		for(final int rootTerm : positionButterfly.nodeTermIndices) {
 			rootNodes[rootTerm].removeInvalidPartialSums(consistencyConstraint.totalSum());
 		}
 	}
 
-	void stripPopulationNode() {
+	void stripNumberOfTruesInProblem() {
 		if(numberOfTruesInProblem != null) {
 			final int populationNodeTier = positionButterfly.leafNodeTier;
 			final int populationNodeTerm = 0;
@@ -155,5 +159,20 @@ final class EquationButterfly {
 			}
 		}
 		return boxes;
+	}
+
+	public void stripConstantConstraints(
+		final HashSet<ConsistencyConstraint> consistencyConstraints
+	) {
+		if(consistencyConstraints != null) {
+			for(final ConsistencyConstraint consistencyConstraint : consistencyConstraints) {
+				if(consistencyConstraint.isConstant()) {
+					final int hadamard = consistencyConstraint.numberOfTruesInConstraint == 0 ? 0 : 1;
+					for(final int rootNodeTerm : consistencyConstraint.sortedAndUniqueDecisionIds) {
+						equationNodes[positionButterfly.rootNodeTier][rootNodeTerm].removeInvalidHadamards(hadamard);
+					}
+				}
+			}
+		}
 	}
 }

@@ -31,6 +31,12 @@ final class EquationNode {
 		equationFacts.removeIf(p -> p.hadamard != validNumberOfTrues);
 	}
 
+	public void removeInvalidHadamards(int hadamard) {
+		Utility.insist(positionNode.isRoot(), "must be a root node");
+
+		equationFacts.removeIf(p -> p.hadamard != hadamard);
+	}
+
 	void fillLeaf(final int multiplier, final int totalSum) {
 		Utility.insist(positionNode.isLeaf(), "not a leaf node");
 
