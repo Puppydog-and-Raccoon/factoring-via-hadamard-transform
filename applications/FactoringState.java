@@ -14,8 +14,8 @@ class FactoringState {
 	final FactoringDecision[][][] decisionsInCells; // [cell row = aId][cell column = bId][flags]
 
 	FactoringState(final FactoringNumber product) {
-		final int numberOfBitsPerProduct   = product.bits.length;
-		final int numberOfBitsPerFactor    = numberOfBitsPerProduct / 2;
+		final int numberOfBitsPerProduct = product.bits.length;
+		final int numberOfBitsPerFactor  = numberOfBitsPerProduct / 2;
 
 		this.product                     = product;
 		this.numberOfBitsPerProduct      = numberOfBitsPerProduct;
@@ -62,19 +62,21 @@ class FactoringState {
 	}
 
 	HashSet<ConsistencyConstraint> unaryConsistencyConstraints() {
-		final int e = numberOfBitsPerFactor - 1;
+		final int gfb = numberOfBitsPerFactor - 1;  // most significant factor bit
+		final int gpb = numberOfBitsPerProduct - 1; // most significant product bit
+
 		final HashSet<ConsistencyConstraint> constraints = new HashSet<ConsistencyConstraint>();
 		for(final int i : Utility.enumerateAscending(numberOfBitsPerFactor)) {
-			final boolean bottomRowProductBit = product.bits[i + e];
+			final boolean bottomRowProductBit = product.bits[i + gfb];
 			final boolean rightColumnProductBit = product.bits[i];
-			addConditionally(constraints, decisionsInCells[0][i], d -> d.sumIn   == false);                 // top row      -> sum in must equal 0
-			addConditionally(constraints, decisionsInCells[e][i], d -> d.sumOut  == bottomRowProductBit);   // bottom row   -> sum out must equal product bit
-			addConditionally(constraints, decisionsInCells[i][0], d -> d.carryIn == false);                 // right column -> carry in must equal 0
-			addConditionally(constraints, decisionsInCells[i][0], d -> d.sumOut  == rightColumnProductBit); // right column -> sum out must equal product bit
+			addConditionally(constraints, decisionsInCells[0][i],   d -> d.sumIn   == false);                 // top row      -> sum in must equal 0
+			addConditionally(constraints, decisionsInCells[gfb][i], d -> d.sumOut  == bottomRowProductBit);   // bottom row   -> sum out must equal product bit
+			addConditionally(constraints, decisionsInCells[i][0],   d -> d.carryIn == false);                 // right column -> carry in must equal 0
+			addConditionally(constraints, decisionsInCells[i][0],   d -> d.sumOut  == rightColumnProductBit); // right column -> sum out must equal product bit
 		}
 		{
-			final boolean bottomLeftCornerProductBit = product.bits[numberOfBitsPerProduct - 1];
-			addConditionally(constraints, decisionsInCells[e][e], d -> d.carryOut == bottomLeftCornerProductBit); // bottom left corner -> carry out must equal product bit
+			final boolean bottomLeftCornerProductBit = product.bits[gpb];
+			addConditionally(constraints, decisionsInCells[gfb][gfb], d -> d.carryOut == bottomLeftCornerProductBit); // bottom left corner -> carry out must equal product bit
 		}
 		return constraints;
 	}
@@ -82,8 +84,8 @@ class FactoringState {
 	// add constraint to forbid this decision, if the property is false
 	void addConditionally(
 		final HashSet<ConsistencyConstraint> constraints,
-		final FactoringDecision[]       cell,
-		final FactoringDecisionProperty property
+		final FactoringDecision[]            cell,
+		final FactoringDecisionProperty      property
 	) {
 		for(final FactoringDecision decision : cell){
 			if(!property.hasProperty(decision)) {
@@ -94,8 +96,9 @@ class FactoringState {
 
 	HashSet<ConsistencyConstraint> binaryConsistencyConstraints() {
 		final HashSet<ConsistencyConstraint> constraints = new HashSet<ConsistencyConstraint>();
-		for(final int aId : Utility.enumerateAscending(numberOfBitsPerFactor)) {
-			for(final int bId : Utility.enumerateAscending(numberOfBitsPerFactor)) {
+		final int[] ids = Utility.enumerateAscending(numberOfBitsPerFactor);
+		for(final int aId : ids) {
+			for(final int bId : ids) {
 				// the carry_in of the left cell must equal the carry_out of the right cell
 				if(!isInRightColumn(bId)) {
 					constraints.add(makeEqualsConstraint(
@@ -111,17 +114,17 @@ class FactoringState {
 					));
 				}
 				// the a_in of the left cell must equal the a_in of the right cell
-				if(!isInRightColumn(bId)) {
+				if(true) {
 					constraints.add(makeEqualsConstraint(
-						decisionsInCells[aId][bId    ], d -> d.aIn,
-						decisionsInCells[aId][bId - 1], d -> d.aIn
+						decisionsInCells[aId][(bId + 1) % numberOfBitsPerFactor], d -> d.aIn,
+						decisionsInCells[aId][ bId                             ], d -> d.aIn
 					));
 				}
 				// the b_in of the below cell must equal the b_in of the above cell
-				if(!isInTopRow(aId)) {
+				if(true) {
 					constraints.add(makeEqualsConstraint(
-						decisionsInCells[aId    ][bId], d -> d.bIn,
-						decisionsInCells[aId - 1][bId], d -> d.bIn
+						decisionsInCells[(aId + 1) % numberOfBitsPerFactor][bId], d -> d.bIn,
+						decisionsInCells[ aId                             ][bId], d -> d.bIn
 					));
 				}
 				// in the left column, the sum_in of the below call must equals the carry_out of the above cell
@@ -178,13 +181,13 @@ class FactoringState {
 
 	static HadamardDomain hadamardDomainFor(int tier, int term) {
 		if(tier < 4) {
-			return isPopulationNode(tier, term) ? HadamardDomain.newSpecific( 0, 1, 1)
-				 :                                HadamardDomain.newSpecific(-1, 1, 1);
+			return isPopulationNode(tier, term) ? HadamardDomain.newSpecific( 0, 1, 1, 0, 1, 1)
+				 :                                HadamardDomain.newSpecific(-1, 1, 1, 0, 1, 1);
 		} else {
 			final int scale = 1 << (tier - 4);
-			return isPopulationNode(tier, term) ? HadamardDomain.newSpecific( scale, scale, 2)
-				 : isShadowedNode(tier, term)   ? HadamardDomain.newSpecific(     0,     0, 2)
-				 :                                HadamardDomain.newSpecific(-scale, scale, 2);
+			return isPopulationNode(tier, term) ? HadamardDomain.newSpecific( scale, scale, 2, scale, scale, 1)
+				 : isShadowedNode(tier, term)   ? HadamardDomain.newSpecific(     0,     0, 2, scale, scale, 1)
+				 :                                HadamardDomain.newSpecific(-scale, scale, 2, scale, scale, 1);
 		}
 	}
 

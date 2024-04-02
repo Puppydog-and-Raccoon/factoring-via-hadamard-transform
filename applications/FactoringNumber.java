@@ -1,5 +1,7 @@
 package applications;
 
+import java.util.Vector;
+
 import consistency.Utility;
 
 public class FactoringNumber {
@@ -16,6 +18,14 @@ public class FactoringNumber {
 		Utility.insist(isBinaryString(numberAsString), NUMBER_MUST_CONTAIN_0S_AND_1S);
 
 		this.bits = toBits(numberAsString);
+	}
+
+	public FactoringNumber(final int number, final int numberOfBits) {
+		Utility.insist(number >= 0, "number (" + number + ") must be zero or positive");
+		Utility.insist(numberOfBits >= 0, "number of bits (" + numberOfBits + ") must be zero or positive");
+		Utility.insist(number < (1 << numberOfBits), "number (" + number + ") must fit in number of bits (" + numberOfBits + ")");
+
+		this.bits = toBits(number, numberOfBits);
 	}
 
 	// -----------------------------------------------------------------------
@@ -73,6 +83,28 @@ public class FactoringNumber {
 		return (a == null) == (b == null) && compare(a, b) == 0;
 	}
 
+	public static FactoringSolution[] pairsOfFactors(final int product, final int numberOfBitsPerFactor) {
+		final int maximumFactor = (1 << numberOfBitsPerFactor) - 1;
+
+		Utility.insist(product > 0, "product must be positive");
+		Utility.insist(numberOfBitsPerFactor > 0, "number of bits per factor must be positive");
+
+		final Vector<FactoringSolution> solutions = new Vector<FactoringSolution>();
+		for(int i = 1; i * i <= product; i++) {
+			if(product % i == 0) {
+				final int j = product / i;
+				if(i <= maximumFactor && j <= maximumFactor) {
+					final FactoringSolution solution = FactoringSolution.makeSolutionFound(
+						new FactoringNumber(i, numberOfBitsPerFactor),
+						new FactoringNumber(j, numberOfBitsPerFactor)
+					);
+					solutions.add(solution);
+				}
+			}
+		}
+		return solutions.toArray(new FactoringSolution[0]);
+	}
+
 	@Override
 	public String toString() {
 		final StringBuffer buffer = new StringBuffer(bits.length);
@@ -103,6 +135,16 @@ public class FactoringNumber {
 			numberAsBooleans[i] = Utility.toBoolean(c);
 		}
 		return numberAsBooleans;
+	}
+
+	private boolean[] toBits(int number, int numberOfBits) {
+		final boolean[] bits = new boolean[numberOfBits];
+		for(int i = 0; i < numberOfBits; i++) {
+			if(i < Integer.SIZE) {
+				bits[i] = (number & (1 << i)) != 0;
+			}
+		}
+		return bits;
 	}
 
 	private void addNthBitToNumber(final int n) {

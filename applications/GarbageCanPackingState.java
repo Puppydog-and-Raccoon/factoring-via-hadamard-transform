@@ -1,7 +1,9 @@
 package applications;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Vector;
 
 import consistency.*;
 
@@ -13,44 +15,64 @@ public class GarbageCanPackingState {
 	}
 
 	ConsistencyProblem makeConsistencyProblem() {
-		final int                                  numberOfGarbageCansToChoose  = garbageCanPackingProblem.numberOfGarbageCansToChoose;
-		final HashSet<GarbageCanPackingConstraint> garbageCanPackingConstraints = GarbageCanPackingState.garbageCanPackingConstraints(garbageCanPackingProblem.garbageCansAndTheirItems);
-		final int                                  numberOfGarbageCans          = garbageCanPackingProblem.garbageCansAndTheirItems.length;
-		final int                                  numberOfDecisionsInProblem   = Utility.roundUpToPowerOfTwo(numberOfGarbageCans + garbageCanPackingConstraints.size());
+		final HashSet<ConsistencyConstraint> consistencyConstraints     = makeConsistencyConstraints();
+		final int                            numberOfCoreDecisions      = garbageCanPackingProblem.garbageCansAndTheirItems.length + consistencyConstraints.size();
+		final int                            numberOfDecisionsInProblem = Utility.roundUpToPowerOfTwo(numberOfCoreDecisions);
 
-		// convert "at most 1 of 2" constraints into "exactly 1 of 3" constraints
-		final HashSet<ConsistencyConstraint> consistencyConstraints = new HashSet<ConsistencyConstraint>();
-		int nextFreeConsistencyDecision = numberOfGarbageCans;
-		for(GarbageCanPackingConstraint garbageCanPackingConstraint : garbageCanPackingConstraints) {
-			consistencyConstraints.add(garbageCanPackingConstraint.toExactlyOneOfThree(nextFreeConsistencyDecision++, numberOfDecisionsInProblem));
-		}
-
-		// add constraints that force all remaining decisions to false. not needed, but makes debugging more predictable
-		for(; nextFreeConsistencyDecision < numberOfDecisionsInProblem; nextFreeConsistencyDecision++) {
-			consistencyConstraints.add(ConsistencyConstraint.exactlyZeroOfOne(nextFreeConsistencyDecision, numberOfDecisionsInProblem));
+		// add constraints that force all remaining decisions to false. not needed but makes debugging more predictable
+		for(int decisionId = numberOfCoreDecisions; decisionId < numberOfDecisionsInProblem; decisionId++) {
+			consistencyConstraints.add(ConsistencyConstraint.exactlyZeroOfOne(decisionId, numberOfDecisionsInProblem));
 		}
 
 		// add constraint for for the number of garbage cans to choose
-		// make this into domains? could be canonical population? no, this must remain a constraint
-		consistencyConstraints.add(ConsistencyConstraint.exactlyMOfFirstN(numberOfGarbageCansToChoose, numberOfGarbageCans, numberOfDecisionsInProblem));
+		consistencyConstraints.add(ConsistencyConstraint.exactlyMOfFirstN(garbageCanPackingProblem.numberOfGarbageCansToChoose, garbageCanPackingProblem.garbageCansAndTheirItems.length, numberOfDecisionsInProblem));
+
+		System.out.println("bbb\n" + Utility.toStringFromSet(consistencyConstraints));
 
 		// make consistency problem
-		// RETHINK: should the first arg be null???
 		return new ConsistencyProblem(null, consistencyConstraints, numberOfDecisionsInProblem);
 	}
 
-	static HashSet<GarbageCanPackingConstraint> garbageCanPackingConstraints(
-		final String[][] garbageCansAndTheirItems
-	) {
-		final HashSet<GarbageCanPackingConstraint> constraints = new HashSet<GarbageCanPackingConstraint>();
-		for(int garbageCanIdA = 0; garbageCanIdA < garbageCansAndTheirItems.length; garbageCanIdA++) {
-			for(int garbageCanIdB = garbageCanIdA + 1; garbageCanIdB < garbageCansAndTheirItems.length; garbageCanIdB++) {
-				if(!GarbageCanPackingState.isConsistent(garbageCansAndTheirItems[garbageCanIdA], garbageCansAndTheirItems[garbageCanIdB])) {
-					constraints.add(GarbageCanPackingConstraint.makeAtMostOneOf(garbageCanIdA, garbageCanIdB));
-				}
+	private HadamardDomain[][] makeHadamardDomains(final int numberOfDecisionsInProblem) {
+		final int numberOfTiers = Utility.numberOfNodeTiers(numberOfDecisionsInProblem);
+		final int numberOfTerms = Utility.numberOfNodeTerms(numberOfDecisionsInProblem);
+		final HadamardDomain[][] hadamardDomains = new HadamardDomain[numberOfTiers][numberOfTerms];
+		for(int tier = 0; tier < numberOfTiers; tier++) {
+			for(int term = 0; term < numberOfTerms; term++) {
+				hadamardDomains[tier][term] = makeHadamardDomain(tier, term);
 			}
 		}
-		return constraints;
+		return hadamardDomains;
+	}
+
+	private HadamardDomain makeHadamardDomain(int tier, int term) {
+		final int minimumHadamard   = HadamardDomain.defaultMinimumForNode(tier, term);
+		final int maximumHadamard   = HadamardDomain.defaultMaximumForNode(tier, term);
+		final int minimumPopulation = tier == 0 ? 0 : 1 << (tier - 1);
+		final int maximumPopulation = tier == 0 ? 1 : 1 << (tier - 1); 
+		return HadamardDomain.newSpecific(minimumHadamard, maximumHadamard, 1, minimumPopulation, maximumPopulation, 1);
+	}
+
+	HashSet<ConsistencyConstraint> makeConsistencyConstraints() {
+		final String[][] garbageCansAndTheirItems = garbageCanPackingProblem.garbageCansAndTheirItems;
+		final HashMap<String, GarbageCanPackingConstraint> fromItemToConstraint = new HashMap<String, GarbageCanPackingConstraint>();
+		int nextVirtualGarbageCanId = garbageCansAndTheirItems.length;
+		for(final int garbageCanIndex : Utility.enumerateAscending(garbageCansAndTheirItems.length)) {
+			for(final String item : garbageCansAndTheirItems[garbageCanIndex]) {
+				if(!fromItemToConstraint.containsKey(item)) {
+					fromItemToConstraint.put(item, new GarbageCanPackingConstraint(item, nextVirtualGarbageCanId++));
+				}
+				fromItemToConstraint.get(item).addActualGarbageCanId(garbageCanIndex);
+			}
+		}
+
+		final int numberOfDecisionsInProblem = Utility.roundUpToPowerOfTwo(garbageCansAndTheirItems.length + fromItemToConstraint.size());
+		final HashSet<ConsistencyConstraint> consistencyConstraints = new HashSet<ConsistencyConstraint>();
+		for(final GarbageCanPackingConstraint garbageCanPackingConstraint : fromItemToConstraint.values()) {
+			final ConsistencyConstraint consistencyConstraint = garbageCanPackingConstraint.toConsistencyConstraint(numberOfDecisionsInProblem);
+			consistencyConstraints.add(consistencyConstraint);
+		}
+		return consistencyConstraints;
 	}
 
 	// two garbage cans are consistent when they contain no items in common
@@ -71,6 +93,17 @@ public class GarbageCanPackingState {
 	) {
 		return consistencySolution.decisions == null
 			 ? GarbageCanPackingSolution.makeNoSolutionFound()
-			 : GarbageCanPackingSolution.makeSolutionFound(Arrays.copyOf(consistencySolution.decisions, garbageCanPackingProblem.garbageCansAndTheirItems.length));
+			 : GarbageCanPackingSolution.makeSolutionFound(makeSelections(consistencySolution));
+	}
+
+	private boolean[] makeSelections(
+		final ConsistencySolution consistencySolution
+	) {
+		final int numberOfSelections = garbageCanPackingProblem.garbageCansAndTheirItems.length;
+		final boolean[] selections = new boolean[numberOfSelections];
+		for(int i = 0; i < numberOfSelections; i++) {
+			selections[i] = consistencySolution.decisions[i];
+		}
+		return selections;
 	}
 }

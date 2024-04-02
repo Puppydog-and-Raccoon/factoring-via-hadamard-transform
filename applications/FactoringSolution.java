@@ -32,10 +32,31 @@ public class FactoringSolution {
 	}
 
 	@Override
+	public boolean equals(Object otherObject) {
+		return otherObject != null
+			&& getClass() == otherObject.getClass()
+			&& FactoringNumber.isEqual(factor0, ((FactoringSolution) otherObject).factor0)
+			&& FactoringNumber.isEqual(factor1, ((FactoringSolution) otherObject).factor1);
+	}
+
+	@Override
 	public String toString() {
 		return "FactoringSolution ["
 			 + "factor0=" + factor0 + ", "
 			 + "factor1=" + factor1
 			 + "]";
+	}
+
+	public boolean matchesOne(FactoringSolution[] factoringSolutions) {
+		if(factoringSolutions == null || factoringSolutions.length == 0) {
+			return factor0 == null || factor1 == null;
+		}
+
+		for(FactoringSolution pairOfFactors : factoringSolutions) {
+			if(this.equals(pairOfFactors)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

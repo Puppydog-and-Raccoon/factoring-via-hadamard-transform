@@ -2,12 +2,15 @@ applications/README
 
 This package solves factoring as well as garbage can packing using consistency
  * factoring - given a product with 2n bits, find factors that each have n bits.
- * garbage can packing - given a list of garbage cans and their contents, choose
-   n garbage cans that contain no contents in common.
+ * garbage can packing - given a group of garbage cans and their contents,
+   choose n garbage cans that contain no contents in common.
 
 We organized the code so that the problem and solution classes are trivial and
 so that the core algorithm functions are simple and functional.
-For example, FactoringTest contains this code.
+For example, the tests contain the following code.
 
    final FactoringProblem  problem  = new FactoringProblem(product);
    final FactoringSolution solution = FactoringAlgorithm.solve(problem);
+
+   final GarbageCanPackingProblem problem = new GarbageCanPackingProblem(garbageCans, numberOfGarbageCansToSelect);
+   final GarbageCanPackingSolution solution = GarbageCanPackingAlgorithm.solve(problem);

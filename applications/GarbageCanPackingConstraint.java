@@ -1,55 +1,43 @@
 package applications;
 
+import java.util.HashSet;
+
 import consistency.ConsistencyConstraint;
-import consistency.Unique;
+import consistency.Utility;
 
 public class GarbageCanPackingConstraint {
-	public final int decisionIdA;
-	public final int decisionIdB;
+	public final String           garbageCanItem;
+	public final HashSet<Integer> actualGarbageCanIds;
+	public final Integer          virtualGarbageCanId;
 
-	private static Unique<GarbageCanPackingConstraint> unique = new Unique<GarbageCanPackingConstraint>();
-
-	private GarbageCanPackingConstraint(
-		final int decisionIdA,
-		final int decisionIdB
+	public GarbageCanPackingConstraint(
+		final String garbageCanItem,
+		final int    virtualGarbageCanId
 	) {
-		this.decisionIdA = Math.min(decisionIdA, decisionIdB);
-		this.decisionIdB = Math.max(decisionIdA, decisionIdB);
+		this.garbageCanItem      = garbageCanItem;
+		this.actualGarbageCanIds = new HashSet<Integer>();
+		this.virtualGarbageCanId = new Integer(virtualGarbageCanId);
 	}
 
-	public ConsistencyConstraint toExactlyOneOfThree(
-		final int decisionIdC,
+	public void addActualGarbageCanId(final int actualGarbageCanId) {
+		actualGarbageCanIds.add(new Integer(actualGarbageCanId));
+	}
+
+	public ConsistencyConstraint toConsistencyConstraint(
 		final int numberOfDecisionsInProblem
 	) {
-		return ConsistencyConstraint.exactlyOneOfThree(decisionIdA, decisionIdB, decisionIdC, numberOfDecisionsInProblem);
-	}
-
-	public static GarbageCanPackingConstraint makeAtMostOneOf(
-		final int decisionIdA,
-		final int decisionIdB
-	) {
-		return unique.unique(new GarbageCanPackingConstraint(decisionIdA, decisionIdB));
-	}
-
-	@Override
-	public int hashCode() {
-		return Integer.rotateLeft(decisionIdA,  0)
-			 ^ Integer.rotateLeft(decisionIdB, 16);
-	}
-
-	@Override
-	public boolean equals(final Object otherObject) {
-		return otherObject != null
-			&& getClass()  == otherObject.getClass()
-			&& decisionIdA == ((GarbageCanPackingConstraint) otherObject).decisionIdA
-			&& decisionIdB == ((GarbageCanPackingConstraint) otherObject).decisionIdB;
+		final HashSet<Integer> allGarbageCanIds = new HashSet<Integer>();
+		allGarbageCanIds.addAll(actualGarbageCanIds);
+		allGarbageCanIds.add(virtualGarbageCanId);
+		return ConsistencyConstraint.exactlyOneOf(allGarbageCanIds, numberOfDecisionsInProblem);
 	}
 
 	@Override
 	public String toString() {
 		return "GarbageCanPackingConstraint ["
-			 + "decisionIdA=" + decisionIdA + ", "
-			 + "decisionIdB=" + decisionIdB
+			 + "garbageCanItem="      + garbageCanItem                               + ", "
+			 + "actualGarbageCanIds=" + Utility.toStringFromSet(actualGarbageCanIds) + ", "
+			 + "virtualGarbageCanId"  + virtualGarbageCanId
 			 + "]";
 	}
 }

@@ -88,4 +88,65 @@ public class FactoringNumberTest {
 		final FactoringNumber testProduct = FactoringNumber.multiply(number0, number1);
 		assertTrue(FactoringNumber.isEqual(testProduct, product));
 	}
+
+	@Test
+	public void testConstructor() {
+		testConstructor(0, 0);
+		testConstructor(0, 1);
+		testConstructor(1, 1);
+		testConstructor(0, 2);
+		testConstructor(1, 2);
+		testConstructor(2, 2);
+		testConstructor(3, 2);
+		testConstructor(0, 3);
+		testConstructor(1, 3);
+		testConstructor(2, 3);
+		testConstructor(3, 3);
+		testConstructor(4, 3);
+		testConstructor(5, 3);
+		testConstructor(6, 3);
+		testConstructor(7, 3);
+	}
+
+	private void testConstructor(final int number, final int numberOfBits) {
+		final FactoringNumber factoringNumber = new FactoringNumber(number, numberOfBits);
+		assertEquals(factoringNumber.bits.length, numberOfBits);
+		for(int i = 0; i < numberOfBits; i++) {
+			assertEquals(" " + i, factoringNumber.bits[i], ((number >> i) & 1) != 0);
+		}
+	}
+
+	@Test
+	public void testFactors() {
+		testFactors(1, 1, new FactoringNumber[][]{
+			new FactoringNumber[]{new FactoringNumber(1, 1), new FactoringNumber(1, 1)},
+		});
+		testFactors(2, 2, new FactoringNumber[][]{
+			new FactoringNumber[]{new FactoringNumber(1, 2), new FactoringNumber(2, 2)},
+		});
+		testFactors(3, 2, new FactoringNumber[][]{
+			new FactoringNumber[]{new FactoringNumber(1, 2), new FactoringNumber(3, 2)},
+		});
+		testFactors(4, 3, new FactoringNumber[][]{
+			new FactoringNumber[]{new FactoringNumber(1, 3), new FactoringNumber(4, 3)},
+			new FactoringNumber[]{new FactoringNumber(2, 3), new FactoringNumber(2, 3)},
+		});
+		testFactors(4, 2, new FactoringNumber[][]{
+			new FactoringNumber[]{new FactoringNumber(2, 2), new FactoringNumber(2, 2)},
+		});
+	}
+
+	private void testFactors(
+		final int product,
+		final int numberOfBitsPerFactor,
+		final FactoringNumber[][] testFactors
+	) {
+		final FactoringNumber[][] algorithmFactors = FactoringNumber.pairsOfFactors(product, numberOfBitsPerFactor);
+		assertEquals(algorithmFactors.length, testFactors.length);
+		for(int i = 0; i < algorithmFactors.length; i++) {
+			assertEquals(algorithmFactors[i].length, 2);
+			assertTrue(FactoringNumber.isEqual(algorithmFactors[i][0], testFactors[i][0]));
+			assertTrue(FactoringNumber.isEqual(algorithmFactors[i][1], testFactors[i][1]));
+		}
+	}
 }
