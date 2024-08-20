@@ -1,0 +1,83 @@
+consistency/README
+
+This package solves consistency problems.
+
+Consistency Classes     -- public classes that solve consistency problems
+   ConsistencyProblem      -- describes and validates a consistency problem
+   ConsistencySolution     -- describes and validates a consistency solution
+   ConsistencyConstraint   -- exactly n of m specific decisison must be true, part of a consistency problem
+   Utility                 -- odds and ends, some functions are used by applications
+   DoubleTabulationHashing -- high-quality if slow hashing
+   SimpleHashSet           -- much smaller than java hash set, but needs good hashing
+   DomainGenerator         -- factories for domains, used in position butterflies
+
+Property Classes        -- properties of butterflies
+   Domain                  -- hadamard, population, and spine domains for butterfly nodes
+   PropertyNode            -- properties of butterfly nodes
+   PropertyBox             -- properties of butterfly boxes
+   PropertyButterfly       -- properties of whole butterflies
+
+Equation Classes        -- constraints in terms of hadamard butterflies
+   EquationFact            -- basic unit of dynamic programming state in equation nodes
+   EquationDelta           -- basic unit of dynamic programming state in equation boxes
+   EquationNode            -- part of an equation butterfly
+   EquationBox             -- part of an equation butterfly
+   EquationButterfly       -- models all hadamard vectors v, where fht(v) dot_product fht(c) = n
+
+Linking Classes         -- model the shared solutions between 2 equation butterflies
+   LinkingFact             -- basic unit of dynamic programming state in linking nodes
+   LinkingDelta            -- basic unit of dynamic programming state in linking boxes
+   LinkingNode             -- part of a linking butterfly
+   LinkingBox              -- part of a linking butterfly
+   LinkingButterfly        -- models all hadamard vectors that are supported by two equation butterflies
+
+***   SpinePartialSumsDelta  -- basic unit of dynamic programming state for simultaneous
+
+Solution Classes        -- models the solution that is common to all equation butterflies
+   PopulationDelta         -- basic unit of dynamic programming state for simultaneous
+   SpineDelta              -- basic unit of dynamic programming state for simultaneous
+   SolutionNode            -- part of a solution butterfly
+   SolutionBox             -- part of a solution butterfly
+   SolutionButterfly       -- models whole solutions
+
+Helper Classes          -- helper classes
+   ConsistencyInternals    -- the core of the consistency algorithm
+   DebugButterfly          -- used for debugging
+   Canonicalizer           -- makes records unique, to save memory
+
+Notes
+   Consistency and helper classes have public visibility.
+   All other classes have package visibility.
+   Classes are marked final, for no good reason.
+   Many more optimizations are possible and will be essential for practical implementations.
+
+   internal types are shorts to save space during prototyping
+   external types are ints to factor numbers with 2k bits
+   deltas can often be pointers to facts
+
+Terminology
+   "hadamard" is an integer hadamard value, anywhere.
+   "population" is a canonical hadamard value in the population tree.
+   "spine" is a canonical hadamard value in the spine tree.
+   "partial sum" is the sum of a subvector of the dot product of a known hadamard vector with an unknown hadamard vector
+
+   "fact" is a unit of state associated with a node.
+   "delta" is a unit of state associated with a box. It connects 2 child facts to 2 parent facts.
+
+   "equation" refers to structures that embody equation butterflies
+   "linking" refers to structures that link 2 equation butterflies
+   "solution" refers to structures that are shared by all linking butterflies
+
+   "root" refers to the top or input tier of a butterfly
+   "leaf" refers to the bottom or output tier of a butterfly
+
+   "butterfly" refers to the shape of the structure, whether an object or an array
+   "tier" refers to all nodes or boxes the same distance from the root within a butterfly
+   "node" refers to individual elements of a butterfly
+   "box" refers to the transition from 2 child nodes to 2 parent nodes
+
+Things to Consider
+   Rename solution to shared?
+   Remove "number of"?
+   Use "index" suffixes??
+   rething "new" prefix
