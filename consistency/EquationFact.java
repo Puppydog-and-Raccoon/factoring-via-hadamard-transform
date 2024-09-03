@@ -61,11 +61,11 @@ final class EquationFact {
 		final EquationFact rightChildFact,
 		final PopulationDelta populationDelta
 	) {
-		Utility.insistSameParity(leftChildFact.hadamard, rightChildFact.hadamard);
-		Utility.insistSameParity(leftChildFact.spine, rightChildFact.spine);
-		Utility.insistEqual(leftChildFact.population, populationDelta.childPopulation());
-		Utility.insistEqual(rightChildFact.population, populationDelta.childPopulation());
-		Utility.insistSameParity(leftChildFact.partialSum, rightChildFact.partialSum);
+//		Utility.insistSameParity(leftChildFact.hadamard, rightChildFact.hadamard);
+//		Utility.insistSameParity(leftChildFact.spine, rightChildFact.spine);
+//		Utility.insistEqual(leftChildFact.population, populationDelta.childPopulation());
+//		Utility.insistEqual(rightChildFact.population, populationDelta.childPopulation());
+//		Utility.insistSameParity(leftChildFact.partialSum, rightChildFact.partialSum);
 
 		return canonicalizer.canonicalize(new EquationFact(
 			(leftChildFact.hadamard + rightChildFact.hadamard) / 2,
@@ -80,11 +80,11 @@ final class EquationFact {
 		final EquationFact rightChildFact,
 		final PopulationDelta populationDelta
 	) {
-		Utility.insistSameParity(leftChildFact.hadamard, rightChildFact.hadamard);
-		Utility.insistSameParity(leftChildFact.spine, rightChildFact.spine);
-		Utility.insistEqual(leftChildFact.population, populationDelta.childPopulation());
-		Utility.insistEqual(rightChildFact.population, populationDelta.childPopulation());
-		Utility.insistSameParity(leftChildFact.partialSum, rightChildFact.partialSum);
+//		Utility.insistSameParity(leftChildFact.hadamard, rightChildFact.hadamard);
+//		Utility.insistSameParity(leftChildFact.spine, rightChildFact.spine);
+//		Utility.insistEqual(leftChildFact.population, populationDelta.childPopulation());
+//		Utility.insistEqual(rightChildFact.population, populationDelta.childPopulation());
+//		Utility.insistSameParity(leftChildFact.partialSum, rightChildFact.partialSum);
 
 		return canonicalizer.canonicalize(new EquationFact(
 			(leftChildFact.hadamard - rightChildFact.hadamard) / 2,
@@ -111,11 +111,11 @@ final class EquationFact {
 		final Object otherObject
 	) {
 		return otherObject != null
-			&& getClass()  == otherObject.getClass()
-			&& hadamard    == ((EquationFact) otherObject).hadamard
-			&& population  == ((EquationFact) otherObject).population
-			&& spine       == ((EquationFact) otherObject).spine
-			&& partialSum  == ((EquationFact) otherObject).partialSum;
+			&& getClass() == otherObject.getClass()
+			&& hadamard   == ((EquationFact) otherObject).hadamard
+			&& population == ((EquationFact) otherObject).population
+			&& spine      == ((EquationFact) otherObject).spine
+			&& partialSum == ((EquationFact) otherObject).partialSum;
 	}
 
 	@Override

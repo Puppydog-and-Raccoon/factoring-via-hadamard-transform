@@ -6,7 +6,7 @@ import java.util.Vector;
 /**
  * This class implements the heart of the consistency algorithm.
  * The three main functions (constructor, merge bottom up, and extract top down)
- * were separated for debugging.
+ * were separated for debugging purposes.
  */
 class ConsistencyInternals {
 	/**
@@ -53,10 +53,21 @@ class ConsistencyInternals {
 		applyOpToLeafNodeTierInAllLinkingButterflies(linkingNode -> linkingNode.intersectFromSharedState());
 
 		for(final int boxTier : propertyButterfly.boxTierIndicesBottomUp) {
+			System.out.println("merging box tier " + boxTier);
+//			testSolutions("puppydog 1 - tier " + boxTier);
+//			System.out.println("linking butterfly[0]");
+//			System.out.println(linkingButterflies[0].nodeStatuses());
+//			System.out.println("solution butterfly");
+//			System.out.println(solutionButterfly.nodeStatuses());
+
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceBottomUp());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectToSharedState());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedState());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectSpinePartialSumDeltasIntoSolutionDeltas());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectToSpineDeltas());
+//			solutionButterfly.simultaneousForTier(boxTier);
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSpineDeltas());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedStateToSpinePartialSumsDelta());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedState());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceBottomUp());
 		}
@@ -68,29 +79,51 @@ class ConsistencyInternals {
 	// question: should we transfer linking butterfly changes to equation butterflies?
 	boolean[] extractTopDown() {
 		for(final int boxTier : propertyButterfly.boxTierIndicesTopDown) {
+			System.out.println("extracting box tier " + boxTier);
+//			testSolutions("puppydog 2 - tier " + boxTier);
+//			System.out.println("linking butterfly[0]");
+//			System.out.println(linkingButterflies[0].boxStatuses());
+//			System.out.println("solution butterfly");
+//			System.out.println(solutionButterfly.boxStatuses());
+
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceTopDown());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectToSharedState());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedState());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectSpinePartialSumDeltasIntoSolutionDeltas());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectToSpineDeltas());
 			solutionButterfly.chooseSpineDeltasForTier(boxTier);
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSpineDeltas());
+			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedStateToSpinePartialSumsDelta());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.intersectFromSharedState());
 			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceTopDown());
-			wringBoxTiersBelow(boxTier);
+			wringBoxTiersBelowUntilNoChange(boxTier);
 		}
 
-		final int[] leafHadamards = linkingButterflies[0].leafHadamards();  // TODO: move to solution butterfly???
+		final int[] leafHadamards = linkingButterflies[0].leafHadamards();  // TODO: move to solution butterfly!!!
 		return leafHadamards == null
 			 ? null
 			 : Utility.toBooleans(Utility.inverseFastSylvesterTransform(leafHadamards));
 	}
 
-	private void wringBoxTiersBelow(final int topBoxTier) {
+	private boolean wringBoxTiersBelowUntilNoChange(final int topBoxTier) {
+		boolean anythingChanged = false;
+		while(wringBoxTiersBelowOnce(topBoxTier)) {
+			anythingChanged = true;
+		}
+		return anythingChanged;
+	}
+
+	private boolean wringBoxTiersBelowOnce(final int topBoxTier) {
+		boolean anythingChanged = false;
 		for(int boxTier = topBoxTier + 1; boxTier <= propertyButterfly.leafBoxTier; boxTier++) {
-			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceTopDown());
+			final boolean thisChanged = applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceTopDown());
+			anythingChanged = anythingChanged || thisChanged;
 		}
 		for(int boxTier = propertyButterfly.leafBoxTier; boxTier >= topBoxTier + 1; boxTier--) {
-			applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceBottomUp());
+			final boolean thisChanged = applyOpToBoxTierInAllLinkingButterflies(boxTier, linkingBox -> linkingBox.wringOnceBottomUp());
+			anythingChanged = anythingChanged || thisChanged;
 		}
+		return anythingChanged;
 	}
 
 	// visible for testing and debugging
@@ -137,11 +170,16 @@ class ConsistencyInternals {
 		for(final int i : Utility.enumerateAscending(equationButterflies.length)) {
 			for(final int j : Utility.enumerateAscending(equationButterflies.length)) {
 				if(i < j) {
-					System.out.println("making linking butterfly for " + i + " to " + j + " of " + equationButterflies.length);
+					System.out.println("linking butterfly " + i + " to butterfly " + j + " of " + equationButterflies.length);
 					final boolean isFirstButterfly = linkingButterflies.size() == 0;
 					final LinkingButterfly linkingButterfly = new LinkingButterfly(equationButterflies[i], equationButterflies[j], solutionButterfly, isFirstButterfly);
 					linkingButterfly.fill();
-					linkingButterfly.wringUntilNoChange();
+					// doing wring once cuts time by 1/3, memory mostly same
+					// removing wring cuts time by ~1/2, memory mostly same, but satisfied critter 21 failed
+					// remove wring and doing equation butterfly wring once, memory mostly same
+					// remove wring in both places blows up
+//					linkingButterfly.wringUntilNoChange();
+					linkingButterfly.wringOnce();
 					linkingButterflies.add(linkingButterfly);
 				}
 			}

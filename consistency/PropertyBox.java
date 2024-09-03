@@ -53,55 +53,6 @@ final class PropertyBox {
 		return parentPopulationDeltas;
 	}
 
-	boolean wouldMakeValidParentEquationFacts(
-		final EquationFact    leftChildEquationFact,
-		final EquationFact    rightChildEquationFact,
-		final PopulationDelta parentPopulationDelta
-	) {
-		Utility.insist(leftChildNode.hadamardDomain.isInDomain(leftChildEquationFact.hadamard), "left child hadamard must lie in its domain");
-		Utility.insist(rightChildNode.hadamardDomain.isInDomain(rightChildEquationFact.hadamard), "right child hadamard must lie in its domain");
-		Utility.insist(leftChildNode.populationDomain.isInDomain(leftChildEquationFact.population), "left child population must lie in its domain");
-		Utility.insist(rightChildNode.populationDomain.isInDomain(rightChildEquationFact.population), "right child population must lie in its domain");
-		Utility.insist(leftChildNode.spineDomain.isInDomain(leftChildEquationFact.spine), "left child spine must lie in its domain");
-		Utility.insist(rightChildNode.spineDomain.isInDomain(rightChildEquationFact.spine), "right child spine must lie in its domain");
-		Utility.insist(leftParentNode.populationDomain.isInDomain(parentPopulationDelta.leftParentPopulation), "left parent population must lie in its domain");
-		Utility.insist(rightParentNode.populationDomain.isInDomain(parentPopulationDelta.rightParentPopulation), "right parent population must lie in its domain");
-
-		return Utility.haveSameParity(leftChildEquationFact.hadamard, rightChildEquationFact.hadamard)
-			&& leftChildEquationFact.population == parentPopulationDelta.childPopulation()
-			&& rightChildEquationFact.population == parentPopulationDelta.childPopulation()
-			&& Utility.haveSameParity(leftChildEquationFact.spine, rightChildEquationFact.spine)
-			&& Utility.haveSameParity(leftChildEquationFact.partialSum, rightChildEquationFact.partialSum)
-			&& leftParentNode.hadamardDomain.isInDomain((leftChildEquationFact.hadamard + rightChildEquationFact.hadamard) / 2)
-			&& rightParentNode.hadamardDomain.isInDomain((leftChildEquationFact.hadamard - rightChildEquationFact.hadamard) / 2)
-			&& leftParentNode.spineDomain.isInDomain((leftChildEquationFact.spine + rightChildEquationFact.spine) / 2)
-			&& rightParentNode.spineDomain.isInDomain((leftChildEquationFact.spine + rightChildEquationFact.spine) / 2);
-	}
-
-	boolean wouldMakeValidParentSolutionFacts(
-		final SolutionFact    leftChildSolutionFact,
-		final SolutionFact    rightChildSolutionFact,
-		final PopulationDelta parentPopulationDelta
-	) {
-		Utility.insist(leftChildNode.hadamardDomain.isInDomain(leftChildSolutionFact.hadamard), "left child hadamard must lie in its domain");
-		Utility.insist(rightChildNode.hadamardDomain.isInDomain(rightChildSolutionFact.hadamard), "right child hadamard must lie in its domain");
-		Utility.insist(leftChildNode.populationDomain.isInDomain(leftChildSolutionFact.population), "left child population must lie in its domain");
-		Utility.insist(rightChildNode.populationDomain.isInDomain(rightChildSolutionFact.population), "right child population must lie in its domain");
-		Utility.insist(leftChildNode.spineDomain.isInDomain(leftChildSolutionFact.spine), "left child spine must lie in its domain");
-		Utility.insist(rightChildNode.spineDomain.isInDomain(rightChildSolutionFact.spine), "right child spine must lie in its domain");
-		Utility.insist(leftParentNode.populationDomain.isInDomain(parentPopulationDelta.leftParentPopulation), "left parent population must lie in its domain");
-		Utility.insist(rightParentNode.populationDomain.isInDomain(parentPopulationDelta.rightParentPopulation), "right parent population must lie in its domain");
-
-		return Utility.haveSameParity(leftChildSolutionFact.hadamard, rightChildSolutionFact.hadamard)
-			&& leftChildSolutionFact.population == parentPopulationDelta.childPopulation()
-			&& rightChildSolutionFact.population == parentPopulationDelta.childPopulation()
-			&& Utility.haveSameParity(leftChildSolutionFact.spine, rightChildSolutionFact.spine)
-			&& leftParentNode.hadamardDomain.isInDomain((leftChildSolutionFact.hadamard + rightChildSolutionFact.hadamard) / 2)
-			&& rightParentNode.hadamardDomain.isInDomain((leftChildSolutionFact.hadamard - rightChildSolutionFact.hadamard) / 2)
-			&& leftParentNode.spineDomain.isInDomain((leftChildSolutionFact.spine + rightChildSolutionFact.spine) / 2)
-			&& rightParentNode.spineDomain.isInDomain((leftChildSolutionFact.spine + rightChildSolutionFact.spine) / 2);
-	}
-
 	PopulationDelta[] parentPopulationDeltas(
 		final int childPopulation
 	) {

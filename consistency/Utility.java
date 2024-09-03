@@ -319,15 +319,15 @@ public final class Utility {
      * @param array the array to copy
      * @return the copy
      */
-	public static String[][] deepCopy(final String[][] arrays) {
-		if(arrays == null) {
+	public static <ElementType> ElementType[][] deepCopy(final ElementType[][] original) {
+		if(original == null) {
 			return null;
 		} else {
-			final String[][] copy = new String[arrays.length][];
-			for(int i = 0; i < arrays.length; i++) {
-				copy[i] = arrays[i] == null
+			final ElementType[][] copy = Arrays.copyOf(original, original.length);
+			for(int i = 0; i < original.length; i++) {
+				copy[i] = original[i] == null
 						? null
-						: Arrays.copyOf(arrays[i], arrays[i].length);
+						: Arrays.copyOf(original[i], original[i].length);
 			}
 			return copy;
 		}
@@ -369,23 +369,23 @@ public final class Utility {
 	}
 
     /**
-     * Determines whether an array of strings contains a particular value.
+     * Determines whether an array of elements contains a particular elemenet.
      * Treats the array as a set of values.
-     * Null values are handled clumsily.
+     * Null values are handled arbitrarily.
      * 
-     * @param stringToFind the value to find
-     * @param strings the set of values to search through
+     * @param elementToFind the element to find
+     * @param elements the set of elements to search through
      * @return true or false
      */
-	public static boolean contains(final String stringToFind, final String[] strings) {
-		if(stringToFind == null && strings == null) {
+	public static <ElementType> boolean contains(final ElementType elementToFind, final ElementType[] elements) {
+		if(elementToFind == null && elements == null) {
 			return true;
 		}
-		if(stringToFind == null || strings == null) {
+		if(elementToFind == null || elements == null) {
 			return false;
 		}
-		for(final String stringInArray : strings) {
-			if(stringToFind == stringInArray) {
+		for(final ElementType elementInArray : elements) {
+			if(elementToFind == elementInArray) {
 				return true;
 			}
 		}
@@ -693,6 +693,26 @@ public final class Utility {
 			for(final int i : ints) {
 				buffer.append(separator);
 				buffer.append(i);
+				separator = " ";
+			}
+			buffer.append("\n");
+		}
+		return buffer.toString();
+	}
+
+    /**
+     * Converts a two-dimensional array into a string.
+     * 
+     * @param array the butterfly of ints to represent
+     * @return the resulting string
+     */
+	public static <ElementType> String toString(final ElementType[][] array) {
+		final StringBuffer buffer = new StringBuffer();
+		for(final ElementType[] vector : array) {
+			String separator = "";
+			for(final ElementType element : vector) {
+				buffer.append(separator);
+				buffer.append(element);
 				separator = " ";
 			}
 			buffer.append("\n");

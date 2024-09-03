@@ -45,8 +45,8 @@ class EquationDelta {
 	// factories
 
 	static EquationDelta make(
-		final EquationFact leftChildEquationFact,
-		final EquationFact rightChildEquationFact,
+		final EquationFact    leftChildEquationFact,
+		final EquationFact    rightChildEquationFact,
 		final PopulationDelta parentPopulationDelta
 	) {
 		return canonicalizer.canonicalize(new EquationDelta(
@@ -99,35 +99,7 @@ class EquationDelta {
 	EquationFact rightChildEquationFact() {
 		return EquationFact.make(rightChildHadamard, childPopulation(), rightChildSpine, rightChildPartialSum);
 	}
-/*
-	PopulationDelta populationDelta() {
-		return PopulationDelta.make(leftParentPopulation, rightParentPopulation);
-	}
 
-	SolutionDelta solutionDelta() {
-		return SolutionDelta.make(leftChildHadamard, rightChildHadamard, leftParentPopulation, rightParentPopulation, leftChildSpine, rightChildSpine);
-	}
-
-	SpineDelta spineDelta() {
-		return SpineDelta.make(leftChildSpine, rightChildSpine);
-	}
-
-	SolutionFact leftParentSolutionFact() {
-		return SolutionFact.make(leftParentHadamard(), leftParentPopulation, parentSpine());
-	}
-
-	SolutionFact rightParentSolutionFact() {
-		return SolutionFact.make(rightParentHadamard(), rightParentPopulation, parentSpine());
-	}
-
-	SolutionFact leftChildSolutionFact() {
-		return SolutionFact.make(leftChildHadamard, childPopulation(), leftChildSpine);
-	}
-
-	SolutionFact rightChildSolutionFact() {
-		return SolutionFact.make(rightChildHadamard, childPopulation(), rightChildSpine);
-	}
-*/
 	// -----------------------------------------------------------------------
 	// boilerplate
 
@@ -169,8 +141,8 @@ class EquationDelta {
 			 + "rpp=" + rightParentPopulation + " "
 			 + "lcs=" + leftChildSpine        + " "
 			 + "rcs=" + rightChildSpine       + " "
-			 + "lcp=" + leftChildPartialSum   + " "
-			 + "rcp=" + rightChildPartialSum
+			 + "lcps=" + leftChildPartialSum  + " "
+			 + "rcps=" + rightChildPartialSum
 			 + ">";
 	}
 }

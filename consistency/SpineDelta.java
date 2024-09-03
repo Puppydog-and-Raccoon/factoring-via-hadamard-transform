@@ -62,7 +62,7 @@ public class SpineDelta {
 
 	@Override
 	public String toString() {
-		return "<ssf "
+		return "<sd "
 			 + "lcs=" + leftChildSpine  + " "
 			 + "rcs=" + rightChildSpine
 			 + ">";

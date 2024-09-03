@@ -4,7 +4,7 @@ class LinkingButterfly {
 	final PropertyButterfly            propertyButterfly;
 	final EquationButterfly            firstEquationButterfly;
 	final EquationButterfly            secondEquationButterfly;
-	final SolutionButterfly            sharedAcrossLinkingButterflies;
+	final SolutionButterfly            solutionButterfly; // sharedAcrossLinkingButterflies
 	final SharedWithinLinkingButterfly sharedWithinLinkingButterfly;
 
 	final LinkingNode[][]              linkingNodes;
@@ -28,26 +28,22 @@ class LinkingButterfly {
 		this.propertyButterfly              = propertyButterfly;
 		this.firstEquationButterfly         = firstEquationButterfly;
 		this.secondEquationButterfly        = secondEquationButterfly;
-		this.sharedAcrossLinkingButterflies = solutionButterfly;
+		this.solutionButterfly = solutionButterfly;
 		this.sharedWithinLinkingButterfly   = sharedWithinLinkingButterfly;
 		this.linkingNodes                   = linkingNodes;
 		this.linkingBoxes                   = linkingBoxes;
 		this.isFirstButterfly               = isFirstButterfly;
 	}
 
-	boolean fill() {
-		boolean anythingChanged = false;
+	void fill() {
 		for(final int leafNodeTerm : propertyButterfly.nodeTermIndicesForward) {
-			final boolean nodeChanged = linkingNodes[propertyButterfly.leafNodeTier][leafNodeTerm].fillLeaf();
-			anythingChanged = anythingChanged || nodeChanged;
+			linkingNodes[propertyButterfly.leafNodeTier][leafNodeTerm].fillLeaf();
 		}
 		for(final int boxTier : propertyButterfly.boxTierIndicesBottomUp) {
 			for(final int boxTerm : propertyButterfly.boxTermIndicesForward) {
-				final boolean boxChanged = linkingBoxes[boxTier][boxTerm].fillBottomUp();
-				anythingChanged = anythingChanged || boxChanged;
+				linkingBoxes[boxTier][boxTerm].fillBottomUp();
 			}
 		}
-		return anythingChanged;
 	}
 
 	boolean wringUntilNoChange() {
@@ -67,6 +63,22 @@ class LinkingButterfly {
 			allLeafHadamardsFound = allLeafHadamardsFound && leafHadamardFound;
 		}
 		return allLeafHadamardsFound ? leafHadamards : null;
+	}
+
+	// this is used for testing
+	void projectSolutionButterfly() {
+		for(final int nodeTier : propertyButterfly.nodeTierIndicesTopDown) {
+			for(final int nodeTerm : propertyButterfly.nodeTermIndicesForward) {
+				final LinkingNode linkingNode = linkingNodes[nodeTier][nodeTerm];
+				linkingNode.projectSolutionFactsIntoSolutionNode();
+			}
+		}
+		for(final int boxTier : propertyButterfly.boxTierIndicesTopDown) {
+			for(final int boxTerm : propertyButterfly.boxTermIndicesForward) {
+				final LinkingBox linkingBox = linkingBoxes[boxTier][boxTerm];
+				linkingBox.projectSolutionDeltasIntoSolutionBox();
+			}
+		}
 	}
 
 	// -----------------------------------------------------------------------
@@ -119,7 +131,7 @@ class LinkingButterfly {
 		return linkingBoxes;
 	}
 
-	private boolean wringOnce() {
+	boolean wringOnce() {
 		boolean anythingChanged = false;
 		{
 			final boolean butterflyChanged  = firstEquationButterfly.wringUntilNoChange();

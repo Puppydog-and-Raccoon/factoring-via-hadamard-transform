@@ -9,12 +9,14 @@ package consistency;
  * Canonicalizer is secondarily about saving time.
  * Externally, it saves time by comparing objects using <tt>==</tt> instead of <tt>equals()</tt>.
  * Internally, it saves time through simplicity.
+ * </p>
  * 
  * <p>
- * Canonicalizer is implemented by a run-of-the-mill hash table with linear probing.
+ * Canonicalizer is a run-of-the-mill hash table with linear probing.
  * Deletes are forbidden.
  * Note that elements of the domain must have excellent hash functions,
  * such as double tabulation.
+ * </p>
  * 
  * <p>
  * Performance testing:
@@ -23,6 +25,7 @@ package consistency;
  * When the max utilization if 50%, the average number of probes per canonicalize
  * starts at about 1.16 and ends at about 1.08.
  * So, storing hashes is unnecessary.
+ * </p>
  * 
  * @param <ElementType> the type of the elements
  */
@@ -32,7 +35,7 @@ public class Canonicalizer<ElementType> {
 
 	private int      numberOfElements;
 	private int      capacity;           // MINIMUM_CAPACITY to MAXIMUM_CAPACITY by powers of 2
-	private Object[] elements;
+	private Object[] slots;
 
 	/**
 	 * The constructor.
@@ -40,16 +43,16 @@ public class Canonicalizer<ElementType> {
 	public Canonicalizer() {
 		numberOfElements = 0;
 		capacity         = MINIMUM_CAPACITY;
-		elements         = new Object[MINIMUM_CAPACITY];
+		slots            = new Object[MINIMUM_CAPACITY];
 	}
 
 	/**
 	 * If the element to canonicalize has been seen before,
 	 * return the original element.
 	 * Otherwise, return the new element.
-	 * The element to canonicalize must be non-null.
+	 * Element to canonicalize must be non-null.
 	 * 
-	 * @param elementToCanonicalize may or may not be canonical
+	 * @param elementToCanonicalize may or may not be canonical, must be non-null
 	 * @return the canonical element
 	 */
 	@SuppressWarnings("unchecked")
@@ -59,45 +62,42 @@ public class Canonicalizer<ElementType> {
 		Utility.insist(elementToCanonicalize != null, "element must be non-null");
 
 		final int wrapMask = capacity - 1;
-		for(int slot = elementToCanonicalize.hashCode() & wrapMask; true; slot = (slot + 1) & wrapMask) {
-			if(elements[slot] == null) {
+		for(int slotId = elementToCanonicalize.hashCode() & wrapMask; true; slotId = (slotId + 1) & wrapMask) {
+			if(slots[slotId] == null) {
 				// previous canonical element not found, so place and return the new element
-				elements[slot] = elementToCanonicalize;
+				slots[slotId] = elementToCanonicalize;
 				numberOfElements += 1;
-				growCapacityIfAppropriate();
+				increaseCapacityIfAppropriate();
 				return elementToCanonicalize;
 			}
-			if(elementToCanonicalize.equals(elements[slot])) {
+			if(elementToCanonicalize.equals(slots[slotId])) {
 				// previous canonical element found, so return it
-				return (ElementType) elements[slot];
+				return (ElementType) slots[slotId];
 			}
 		}
 	}
 
-	// -----------------------------------------------------------------------
-	// helpers
-
-	private void growCapacityIfAppropriate() {
-		final int maximumNumberOfElements = capacity / 2; // * 3 / 4;
+	private void increaseCapacityIfAppropriate() {
+		final int maximumNumberOfElements = capacity * 5 / 8; // could be 1/2, 3/4, or whatever
 		if(numberOfElements > maximumNumberOfElements) {
 			Utility.insist(capacity < MAXIMUM_CAPACITY, "too many elements");
 
-			final Object[] previousElements = elements;
+			final Object[] previousSlots = slots;
 			capacity *= 2;
-			elements = new Object[capacity];
-			insertPreviousElementsIntoCurrentElements(previousElements);
+			slots = new Object[capacity];
+			refillSlots(previousSlots);
 		}
 	}
 
-	private void insertPreviousElementsIntoCurrentElements(
-		final Object[] previousElements
+	private void refillSlots(
+		final Object[] previousSlots
 	) {
 		final int wrapMask = capacity - 1;
-		for(final Object previousElement : previousElements) {
-			if(previousElement != null) {
-				for(int slot = previousElement.hashCode() & wrapMask; true; slot = (slot + 1) & wrapMask) {
-					if(elements[slot] == null) {
-						elements[slot] = previousElement;
+		for(final Object previousSlot : previousSlots) {
+			if(previousSlot != null) {
+				for(int slotId = previousSlot.hashCode() & wrapMask; true; slotId = (slotId + 1) & wrapMask) {
+					if(slots[slotId] == null) {
+						slots[slotId] = previousSlot;
 						break;
 					}
 				}

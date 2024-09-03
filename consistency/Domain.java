@@ -25,7 +25,8 @@ class Domain {
 	boolean isInDomain(
 		final int value
 	) {
-		return minimum <= value && value <= maximum && (value - minimum) % stride == 0;
+//		return minimum <= value && value <= maximum && (value - minimum) % stride == 0;
+		return minimum <= value && value <= maximum && ((value - minimum) & (stride - 1)) == 0;
 	}
 
 	int[] enumerate() {

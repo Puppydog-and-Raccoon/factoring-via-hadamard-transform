@@ -2,8 +2,11 @@ package consistency;
 
 // TODO: rename shared?
 
-// contains the information that gets shared across all linking butterflies
-// this should be a singleton
+/**
+ * Contains the information that gets shared across all linking butterflies.
+ * This should be a singleton.
+ *
+ */
 
 class SolutionButterfly {
 	final PropertyButterfly propertyButterfly;
@@ -124,19 +127,15 @@ class SolutionButterfly {
 		return buffer.toString();
 	}
 
-	boolean fillAllFactsAndDeltas() {
-		boolean anythingChanged = false;
+	void fillAllFactsAndDeltas() {
 		for(final int leafNodeTerm : propertyButterfly.nodeTermIndicesRandomly()) {
-			final boolean fillLeafChanged = solutionNodes[propertyButterfly.leafNodeTier][leafNodeTerm].fillAllPossibleLeafStates();
-			anythingChanged = anythingChanged || fillLeafChanged;
+			solutionNodes[propertyButterfly.leafNodeTier][leafNodeTerm].fillAllPossibleLeafStates();
 		}
 		for(final int boxTier : propertyButterfly.boxTierIndicesBottomUp) {
 			for(final int boxTerm : propertyButterfly.boxTermIndicesRandomly()) {
-				final boolean fillBoxChanged = solutionBoxes[boxTier][boxTerm].fillAllPossibleBoxStates();
-				anythingChanged = anythingChanged || fillBoxChanged;
+				solutionBoxes[boxTier][boxTerm].fillAllPossibleBoxStates();
 			}
 		}
-		return anythingChanged;
 	}
 
 	// -----------------------------------------------------------------------
@@ -184,12 +183,11 @@ class SolutionButterfly {
 		return solutionDeltas.size();
 	}
 
+	@SuppressWarnings("unchecked")
 	void chooseSpineDeltasForTier(int boxTier) {
-		for(final Object set : spineDeltasSets[boxTier]) {
-			final SimpleHashSet<?> spineDeltaSet = (SimpleHashSet<?>) set;
-			System.out.println(" spine deltas size " + spineDeltaSet.size());
+		for(int treeTerm = 0; treeTerm < spineDeltasSets[boxTier].length; treeTerm++) {
+			final SimpleHashSet<SpineDelta> spineDeltaSet = (SimpleHashSet<SpineDelta>) spineDeltasSets[boxTier][treeTerm];
 			spineDeltaSet.removeAllButRandomSingleton();
-			System.out.println("   after " + Utility.toStringFromSet(spineDeltaSet));
 		}
 	}
 
@@ -198,6 +196,6 @@ class SolutionButterfly {
 
 	@Override
 	public String toString() {
-		return "SolutionButterfly [solutionNodes=\n" + Utility.toString(solutionNodes) + "]";
+		return "SolutionButterfly [solutionNodes=\n" /* + Utility.toString(solutionNodes) */ + "]";
 	}
 }

@@ -78,7 +78,7 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	private int      capacity;           // MINIMUM_CAPACITY to MAXIMUM_CAPACITY by powers of 2
 	private int      numberOfElements;
 	private int      numberOfDeletes;
-	private Object[] elements;           // TODO: renaame slots
+	private Object[] slots;
 
 	/**
 	 * The constructor.
@@ -99,25 +99,25 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	) {
 		int firstDeletedSlot = SLOT_NOT_FOUND;
 
-		for(int slot = elementToAdd.hashCode() & wrapMask(); true; slot = (slot + 1) & wrapMask()) {
-			if(elements[slot] == elementToAdd) {
+		for(int slotId = elementToAdd.hashCode() & wrapMask(); true; slotId = (slotId + 1) & wrapMask()) {
+			if(slots[slotId] == elementToAdd) {
 				// element is already present
 				return false;
 			}
-			if(elements[slot] == null) {
+			if(slots[slotId] == null) {
 				// finding an empty slot implies the element is not present
 				if(firstDeletedSlot == SLOT_NOT_FOUND) {
-					setEmptySlotToElement(slot, elementToAdd);
+					setEmptySlotToElement(slotId, elementToAdd);
 				} else {
 					setDeletedSlotToElement(firstDeletedSlot, elementToAdd);
 				}
 				increaseCapacityIfAppropriate();
 				return true;
 			}
-			if(elements[slot] == DELETED) {
+			if(slots[slotId] == DELETED) {
 				// remember the first deleted slot
 				if(firstDeletedSlot == SLOT_NOT_FOUND) {
-					firstDeletedSlot = slot;
+					firstDeletedSlot = slotId;
 				}
 			}
 		}
@@ -126,14 +126,14 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	public boolean remove(
 		final Object elementToRemove
 	) {
-		for(int slot = elementToRemove.hashCode() & wrapMask(); true; slot = (slot + 1) & wrapMask()) {
-			if(elements[slot] == elementToRemove) {
+		for(int slotId = elementToRemove.hashCode() & wrapMask(); true; slotId = (slotId + 1) & wrapMask()) {
+			if(slots[slotId] == elementToRemove) {
 				// found
-				setElementSlotToDeleted(slot);
+				setElementSlotToDeleted(slotId);
 				decreaseCapacityIfAppropriate();
 				return true;
 			}
-			if(elements[slot] == null) {
+			if(slots[slotId] == null) {
 				// not found
 				return false;
 			}
@@ -151,11 +151,11 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	public boolean contains(
 		final Object elementToFind
 	) {
-		for(int slot = elementToFind.hashCode() & wrapMask(); true; slot = (slot + 1) & wrapMask()) {
-			if(elements[slot] == elementToFind) {
+		for(int slotId = elementToFind.hashCode() & wrapMask(); true; slotId = (slotId + 1) & wrapMask()) {
+			if(slots[slotId] == elementToFind) {
 				return true;
 			}
-			if(elements[slot] == null) {
+			if(slots[slotId] == null) {
 				return false;
 			}
 		}
@@ -169,9 +169,9 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 
 	public boolean addAll(final SimpleHashSet<?> otherHashSet) {
 		boolean anythingChanged = false;
-		for(final Object otherElement : otherHashSet.elements) {
-			if(otherElement != null && otherElement != DELETED) {
-				final boolean thisChanged = add(otherElement);
+		for(final Object otherSlot : otherHashSet.slots) {
+			if(otherSlot != null && otherSlot != DELETED) {
+				final boolean thisChanged = add(otherSlot);
 				anythingChanged = anythingChanged || thisChanged;
 			}
 		}
@@ -180,9 +180,9 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 
 	public boolean removeAll(final SimpleHashSet<?> otherHashSet) {
 		boolean anythingChanged = false;
-		for(final Object otherElement : otherHashSet.elements) {
-			if(otherElement != null && otherElement != DELETED) {
-				final boolean thisChanged = remove(otherElement);
+		for(final Object otherSlot : otherHashSet.slots) {
+			if(otherSlot != null && otherSlot != DELETED) {
+				final boolean thisChanged = remove(otherSlot);
 				anythingChanged = anythingChanged || thisChanged;
 			}
 		}
@@ -196,18 +196,18 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 		}
 
 		int numberToSkip = randomNumberGenerator.nextInt(numberOfElements);
-		for(final Object element : elements) {
-			if(element != null && element != DELETED) {
+		for(final Object slot : slots) {
+			if(slot != null && slot != DELETED) {
 				if(numberToSkip-- == 0) {
-					return (ElementType) element;
+					return (ElementType) slot;
 				}
 			}
 		}
 
 		while(true) {
-			int slot = randomNumberGenerator.nextInt() & wrapMask();
-			if(elements[slot] != null) {
-				return (ElementType) elements[slot];
+			int slotId = randomNumberGenerator.nextInt() & wrapMask();
+			if(slots[slotId] != null) {
+				return (ElementType) slots[slotId];
 			}
 		}
 	}
@@ -217,10 +217,10 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	@SuppressWarnings("unchecked")
 	public boolean removeIf(final Predicate<ElementType> filter) {
 		boolean anythingChanged = false;
-		for(int slot = 0; slot < capacity; slot++) {
-			final Object element = elements[slot];
+		for(int slotId = 0; slotId < capacity; slotId++) {
+			final Object element = slots[slotId];
 			if(element != null && element != DELETED && filter.test((ElementType) element)) {
-				setElementSlotToDeleted(slot);
+				setElementSlotToDeleted(slotId);
 				anythingChanged = true;
 			}
 		}
@@ -230,11 +230,11 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 
 	public boolean retainAll(final SimpleHashSet<?> otherHashMap) {
 		boolean anythingChanged = false;
-		for(int slot = 0; slot < capacity; slot++) {
-			final Object element = elements[slot];
+		for(int slotId = 0; slotId < capacity; slotId++) {
+			final Object element = slots[slotId];
 			if(element != null && element != DELETED) {
 				if(!otherHashMap.contains(element)) {
-					setElementSlotToDeleted(slot);
+					setElementSlotToDeleted(slotId);
 					anythingChanged = true;
 				}
 			}
@@ -244,8 +244,8 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	}
 
 	public boolean containsAll(final SimpleHashSet<?> otherHashMap) {
-		for(final Object otherElement : otherHashMap.elements) {
-			if(otherElement!= null && otherElement != DELETED && !contains(otherElement)) {
+		for(final Object otherSlot : otherHashMap.slots) {
+			if(otherSlot!= null && otherSlot != DELETED && !contains(otherSlot)) {
 				return false;
 			}
 		}
@@ -255,8 +255,8 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	@Override
 	public Iterator<ElementType> iterator() {
 		return new Iterator<ElementType>() {
-			private int currentSlot = SLOT_NOT_FOUND;
-			private int nextSlot    = SLOT_NOT_FOUND;
+			private int currentSlot  = SLOT_NOT_FOUND;
+			private int nextSlot     = SLOT_NOT_FOUND;
 
 			@Override
 			public boolean hasNext() {
@@ -268,7 +268,7 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 			@Override
 			public ElementType next() {
 				currentSlot = nextSlot;
-				return (ElementType) elements[currentSlot];
+				return (ElementType) slots[currentSlot];
 			}
 
 			@Override
@@ -277,11 +277,11 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 			}
 
 			private int indexOfNextElement() {
-				int indexOfNextElement = currentSlot + 1;
-				while(indexOfNextElement < capacity && (elements[indexOfNextElement] == null || elements[indexOfNextElement] == DELETED)) {
-					indexOfNextElement += 1;
+				int indexOfNextSlot = currentSlot + 1;
+				while(indexOfNextSlot < capacity && (slots[indexOfNextSlot] == null || slots[indexOfNextSlot] == DELETED)) {
+					indexOfNextSlot += 1;
 				}
-				return indexOfNextElement;
+				return indexOfNextSlot;
 			}
 		};
 	}
@@ -310,7 +310,7 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 		capacity         = newCapacity;
 		numberOfElements = 0;
 		numberOfDeletes  = 0;
-		elements         = new Object[newCapacity];
+		slots            = new Object[newCapacity];
 	}
 
 	private int minimumNumberOfValidElements() {
@@ -337,7 +337,7 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 		}
 	}
 
-	private void decreaseCapacityIfAppropriate() {
+	public void decreaseCapacityIfAppropriate() {
 		if(numberOfElements < minimumNumberOfValidElements()) {
 			do {
 				refillEverythingInternal(capacity / 2);
@@ -352,19 +352,19 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	) {
 		Utility.insistInRange(MINIMUM_CAPACITY, newCapacity, MAXIMUM_CAPACITY);
 
-		final Object[] previousElements = elements;
+		final Object[] previousSlots = slots;
 
 		capacity        = newCapacity;
 		numberOfDeletes = 0;
-		elements        = new Object[newCapacity];
+		slots        = new Object[newCapacity];
 
-		for(final Object previousElement : previousElements) {
-			if(previousElement != null && previousElement != DELETED) {
-				int slot = previousElement.hashCode() & wrapMask();
-				while(elements[slot] != null) {
-					slot = (slot + 1) & wrapMask();
+		for(final Object previousSlot : previousSlots) {
+			if(previousSlot != null && previousSlot != DELETED) {
+				int slotId = previousSlot.hashCode() & wrapMask();
+				while(slots[slotId] != null) {
+					slotId = (slotId + 1) & wrapMask();
 				}
-				elements[slot] = previousElement;
+				slots[slotId] = previousSlot;
 			}
 		}
 	}
@@ -375,7 +375,7 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	) {
 //		Utility.insist(elements[emptySlot] == null, "bad");
 
-		elements[emptySlot] = element;
+		slots[emptySlot] = element;
 		numberOfElements += 1;
 	}
 
@@ -385,15 +385,17 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	) {
 //		Utility.insist(elements[deletedSlot] == DELETED, "bad");
 
-		elements[deletedSlot] = elementToAdd;
+		slots[deletedSlot] = elementToAdd;
 		numberOfElements      += 1;
 		numberOfDeletes       -= 1;
 	}
 
-	private void setElementSlotToDeleted(int slot) {
+	private void setElementSlotToDeleted(
+		final int slotId
+	) {
 //		Utility.insist(elements[slot] != null && elements[slot] != DELETED, "bad");
 
-		elements[slot]   = DELETED;
+		slots[slotId]   = DELETED;
 		numberOfElements -= 1;
 		numberOfDeletes  += 1;
 	}
@@ -402,15 +404,17 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	// boilerplate functions
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(
+		final Object otherObject
+	) {
+		if (this == otherObject)
 			return true;
-		if (obj == null)
+		if (otherObject == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (getClass() != otherObject.getClass())
 			return false;
 
-		SimpleHashSet<?> other = (SimpleHashSet<?>) obj;
+		SimpleHashSet<?> other = (SimpleHashSet<?>) otherObject;
 		if (numberOfElements != other.numberOfElements)
 			return false;
 		for(final Object object : other) {
@@ -425,9 +429,9 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	public ElementType[] toArray(ElementType[] original) {
 		final ElementType[] array = Arrays.copyOf(original, numberOfElements);
 		int i = 0;
-		for(final Object element : elements) {
-			if(element != null) {
-				array[i++] = (ElementType) element;
+		for(final Object slot : slots) {
+			if(slot != null) {
+				array[i++] = (ElementType) slot;
 			}
 		}
 		return array;
@@ -456,9 +460,8 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 	}
 
 	/**
-	 * Remove everything from a hash set except for a single random element.
+	 * Remove everything from a hash set except for one random element.
 	 * 
-	 * @param hashSet the hash set to choose from
 	 * @return whether anything changed
 	 */
 	public boolean removeAllButRandomSingleton() {
@@ -466,8 +469,18 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 			return false;
 		} else {
 			final ElementType elementToKeep = chooseRandomElement();
-			return removeIf(element -> element != elementToKeep);
+			return removeAllBut(elementToKeep);
 		}
+	}
+
+	/**
+	 * Remove everything from a hash set except for one specific element.
+	 * 
+	 * @param elementToKeep the element to keep
+	 * @return whether anything changed
+	 */
+	public boolean removeAllBut(final ElementType elementToKeep) {
+		return removeIf(element -> element != elementToKeep);
 	}
 
 	/**
@@ -537,14 +550,37 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 		return hashSet;
 	}
 
+	public static SimpleHashSet<Integer> makeHashSetRange(
+		final int first,
+		final int last
+	) {
+		final SimpleHashSet<Integer> hashSet = new SimpleHashSet<>();
+		for(int i = first; i <= last; i++) {
+			hashSet.add(new Integer(i));
+		}
+		return hashSet;
+	}
+
+	public static SimpleHashSet<Integer> makeHashSetRange(
+		final int first,
+		final int last,
+		final int stride
+	) {
+		final SimpleHashSet<Integer> hashSet = new SimpleHashSet<>();
+		for(int i = first; i <= last; i += stride) {
+			hashSet.add(new Integer(i));
+		}
+		return hashSet;
+	}
+
 	public int[] toSortedIntArray() {
 		final int[] ints = new int[numberOfElements];
 		int next = 0;
-		for(final Object element : elements) {
-			if(element instanceof Integer) {
-				Integer integer = (Integer) element;
+		for(final Object slot : slots) {
+			if(slot instanceof Integer) {
+				Integer integer = (Integer) slot;
 				ints[next++] = integer.intValue();
-			} else if(element != null) {
+			} else if(slot != null) {
 //				System.out.println(element.getClass().getName());
 				throw new RuntimeException("this only works for Integer objects");
 			}
@@ -568,11 +604,11 @@ public class SimpleHashSet<ElementType> implements Iterable<ElementType> {
 		capacity         = otherHashSet.capacity;
 		numberOfElements = otherHashSet.numberOfElements;
 		numberOfDeletes  = otherHashSet.numberOfDeletes;
-		elements         = otherHashSet.elements;
+		slots            = otherHashSet.slots;
 		otherHashSet.capacity         = 0;
 		otherHashSet.numberOfElements = 0;
 		otherHashSet.numberOfDeletes  = 0;
-		otherHashSet.elements         = null;
+		otherHashSet.slots            = null;
 		return true;
 	}
 }

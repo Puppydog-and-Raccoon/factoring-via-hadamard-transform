@@ -69,12 +69,14 @@ final class PropertyButterfly {
 		return new PropertyButterfly(numberOfDecisionsInProblem, domainGenerator);
 	}
 
+	// ERROR: restore
 	int[] nodeTermIndicesRandomly() {
-		return Utility.enumerateRandomly(numberOfNodeTerms);
+		return Utility.enumerateAscending(numberOfNodeTerms);
 	}
 
+	// ERROR: restore
 	int[] boxTermIndicesRandomly() {
-		return Utility.enumerateRandomly(numberOfBoxTerms);		
+		return Utility.enumerateAscending(numberOfBoxTerms);		
 	}
 
 	private static PropertyNode[][] newNodes(

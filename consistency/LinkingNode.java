@@ -73,8 +73,7 @@ class LinkingNode {
 	// consistency functions
 
 	boolean intersectToSharedState() {
-		final SimpleHashSet<SolutionFact> solutionFacts = projectSolutionFacts();
-		return solutionNode.solutionFacts.assignAllOrRetainAll(isFirstButterfly, solutionFacts);
+		return solutionNode.solutionFacts.assignAllOrRetainAll(isFirstButterfly, projectSolutionFacts());
 	}
 
 	boolean intersectFromSharedState() {
@@ -99,5 +98,13 @@ class LinkingNode {
 			return true;
 		}
 		return false;
+	}
+
+	// this is used for testing
+	void projectSolutionFactsIntoSolutionNode() {
+		solutionNode.solutionFacts.clear();
+		for(final LinkingFact linkingFact : linkingFacts) {
+			solutionNode.solutionFacts.add(linkingFact.solutionFact());
+		}
 	}
 }

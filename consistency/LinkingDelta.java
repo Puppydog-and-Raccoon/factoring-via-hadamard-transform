@@ -9,10 +9,10 @@ class LinkingDelta {
 	private final short rightParentPopulation;
 	private final short leftChildSpine;
 	private final short rightChildSpine;
-	private final short firstLeftChildPartialSum;
-	private final short firstRightChildPartialSum;
-	private final short secondLeftChildPartialSum;
-	private final short secondRightChildPartialSum;
+	final short firstLeftChildPartialSum;
+	final short firstRightChildPartialSum;
+	final short secondLeftChildPartialSum;
+	final short secondRightChildPartialSum;
 
 	private static final Canonicalizer<LinkingDelta> canonicalizer = new Canonicalizer<LinkingDelta>();
 
@@ -148,8 +148,13 @@ class LinkingDelta {
 		return SolutionDelta.make(leftChildHadamard, rightChildHadamard, leftParentPopulation, rightParentPopulation, leftChildSpine, rightChildSpine);
 	}
 
+	// ERROR: rename / rethink
 	SpinePartialSumsDelta linkingSpinePartialSumsDelta() {
 		return SpinePartialSumsDelta.make(leftChildSpine, rightChildSpine, firstLeftChildPartialSum, firstRightChildPartialSum, secondLeftChildPartialSum, secondRightChildPartialSum);
+	}
+
+	PopulationDelta populationDelta() {
+		return PopulationDelta.make(leftParentPopulation, rightParentPopulation);
 	}
 
 	// -----------------------------------------------------------------------

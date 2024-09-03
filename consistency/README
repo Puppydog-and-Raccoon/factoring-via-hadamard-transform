@@ -46,6 +46,7 @@ Helper Classes          -- helper classes
    Canonicalizer           -- makes records unique, to save memory
 
 Notes
+   Consistency seems to work with unique and semi-unique solutions.
    Consistency and helper classes have public visibility.
    All other classes have package visibility.
    Classes are marked final, for no good reason.
@@ -81,3 +82,11 @@ Things to Consider
    Remove "number of"?
    Use "index" suffixes??
    rething "new" prefix
+
+Performance Notes - Linking Box is the worst
+   fill           2627 seconds
+   wring up       5163 seconds
+   wring down     1999 seconds
+   sum           10789 seconds   95.7&
+   other stuff     470 seconds    4.3%
+   total running 11268 seconds

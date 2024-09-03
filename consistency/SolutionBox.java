@@ -32,24 +32,16 @@ class SolutionBox {
 			 + ">";
 	}
 
-	// ERROR: refactor
-	// ERROR: merge "would makes()"???
-	// ERROR: names
 	void rippleUp(
 		final DebugButterfly<SolutionFact> solutionFactButterfly
 	) {
 		for(final SolutionFact leftChildSolutionFact : solutionFactButterfly.hashSetAt(propertyBox.leftChildNode)) {
 			for(final SolutionFact rightChildSolutionFact : solutionFactButterfly.hashSetAt(propertyBox.rightChildNode)) {
-				if(leftChildSolutionFact.population == rightChildSolutionFact.population) {
+				if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
 					for(final PopulationDelta parentPopulationDelta : propertyBox.parentPopulationDeltas(leftChildSolutionFact.population)) {
-						if(propertyBox.wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta)) {
-							final SolutionFact leftParentSolutionFact = SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionFact rightParentSolutionFact = SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionDelta solutionDelta = SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							if(solutionDeltaSet.contains(solutionDelta)) {
-								solutionFactButterfly.hashSetAt(propertyBox.leftParentNode).add(leftParentSolutionFact);
-								solutionFactButterfly.hashSetAt(propertyBox.rightParentNode).add(rightParentSolutionFact);
-							}
+						if(solutionDeltaSet.contains(SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta))) {
+							solutionFactButterfly.hashSetAt(propertyBox.leftParentNode).add(SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
+							solutionFactButterfly.hashSetAt(propertyBox.rightParentNode).add(SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
 						}
 					}
 				}
@@ -61,28 +53,13 @@ class SolutionBox {
 		final DebugButterfly<SolutionFact> solutionFactButterfly,
 		final int[][]                      populationButterfly
 	) {
-		final int leftParentPopulation  = populationButterfly[propertyBox.leftParentNode.nodeTier][propertyBox.leftParentNode.nodeTerm];
-		final int rightParentPopulation = populationButterfly[propertyBox.rightParentNode.nodeTier][propertyBox.rightParentNode.nodeTerm];
-
 		for(final SolutionFact leftChildSolutionFact : solutionFactButterfly.hashSetAt(propertyBox.leftChildNode)) {
 			for(final SolutionFact rightChildSolutionFact : solutionFactButterfly.hashSetAt(propertyBox.rightChildNode)) {
-				if(leftChildSolutionFact.population == rightChildSolutionFact.population) {
+				if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
 					for(final PopulationDelta parentPopulationDelta : propertyBox.parentPopulationDeltas(leftChildSolutionFact.population)) {
-						final boolean aaa = propertyBox.wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-//							final boolean bbb = aaa && propertyBox.leftParentNode.wouldMakeValidParentHadamards(leftChildSolutionFact.hadamard, rightChildSolutionFact.hadamard, parentPopulationDelta);
-		//				System.out.println("888 " + aaa + " " + bbb);
-						if(aaa) {
-		//					System.out.println("999");
-							final SolutionFact leftParentSolutionFact = SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionFact rightParentSolutionFact = SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionDelta solutionDelta = SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							if(solutionDeltaSet.contains(solutionDelta)
-							&& solutionDelta.leftParentPopulation == leftParentPopulation
-							&& solutionDelta.rightParentPopulation == rightParentPopulation) {
-		//						System.out.println("000");
-								solutionFactButterfly.hashSetAt(propertyBox.leftParentNode).add(leftParentSolutionFact);
-								solutionFactButterfly.hashSetAt(propertyBox.rightParentNode).add(rightParentSolutionFact);
-							}
+						if(solutionDeltaSet.contains(SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta))) {
+							solutionFactButterfly.hashSetAt(propertyBox.leftParentNode).add(SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
+							solutionFactButterfly.hashSetAt(propertyBox.rightParentNode).add(SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
 						}
 					}
 				}
@@ -90,33 +67,30 @@ class SolutionBox {
 		}
 	}
 
-	boolean fillAllPossibleBoxStates() {
-		final SimpleHashSet<SolutionFact>  verifiedLeftParentSolutionFacts  = new SimpleHashSet<>();
-		final SimpleHashSet<SolutionFact>  verifiedRightParentSolutionFacts = new SimpleHashSet<>();
-		final SimpleHashSet<SolutionDelta> verifiedSolutionDeltas           = new SimpleHashSet<>();
-
-		System.out.println("uuu " + propertyBox);
+	void fillAllPossibleBoxStates() {
 		for(final SolutionFact leftChildSolutionFact : leftChildNode.solutionFacts) {
 			for(final SolutionFact rightChildSolutionFact : rightChildNode.solutionFacts) {
-				if(leftChildSolutionFact.population == rightChildSolutionFact.population) {
+				if(wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact)) {
 					for(final PopulationDelta parentPopulationDelta : propertyBox.parentPopulationDeltas(leftChildSolutionFact.population)) {
-						if(propertyBox.wouldMakeValidParentSolutionFacts(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta)
-						/*&& propertyBox.leftParentNode.wouldMakeValidParentHadamards(leftChildSolutionFact.hadamard, rightChildSolutionFact.hadamard)*/) {
-							final SolutionDelta solutionDelta = SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionFact leftParentSolutionFact = SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							final SolutionFact rightParentSolutionFact = SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta);
-							verifiedLeftParentSolutionFacts.add(leftParentSolutionFact);
-							verifiedRightParentSolutionFacts.add(rightParentSolutionFact);
-							verifiedSolutionDeltas.add(solutionDelta);
-						}
+						solutionDeltaSet.add(SolutionDelta.make(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
+						leftParentNode.solutionFacts.add(SolutionFact.makeLeftParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
+						rightParentNode.solutionFacts.add(SolutionFact.makeRightParent(leftChildSolutionFact, rightChildSolutionFact, parentPopulationDelta));
 					}
 				}
 			}
 		}
+	}
 
-		final boolean a = leftParentNode.solutionFacts.addAll(verifiedLeftParentSolutionFacts);
-		final boolean b = rightParentNode.solutionFacts.addAll(verifiedRightParentSolutionFacts);
-		final boolean c = solutionDeltaSet.addAll(verifiedSolutionDeltas);
-		return a || b || c;
+	boolean wouldMakeValidParentSolutionFacts(
+		final SolutionFact leftChildSolutionFact,
+		final SolutionFact rightChildSolutionFact
+	) {
+		return Utility.haveSameParity(leftChildSolutionFact.hadamard, rightChildSolutionFact.hadamard)
+			&& leftChildSolutionFact.population == rightChildSolutionFact.population
+			&& Utility.haveSameParity(leftChildSolutionFact.spine, rightChildSolutionFact.spine)
+			&& propertyBox.leftParentNode.hadamardDomain.isInDomain((leftChildSolutionFact.hadamard + rightChildSolutionFact.hadamard) / 2)
+			&& propertyBox.rightParentNode.hadamardDomain.isInDomain((leftChildSolutionFact.hadamard - rightChildSolutionFact.hadamard) / 2)
+			&& propertyBox.leftParentNode.spineDomain.isInDomain((leftChildSolutionFact.spine + rightChildSolutionFact.spine) / 2)
+			&& propertyBox.rightParentNode.spineDomain.isInDomain((leftChildSolutionFact.spine + rightChildSolutionFact.spine) / 2);
 	}
 }

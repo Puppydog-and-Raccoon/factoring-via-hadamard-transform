@@ -1,5 +1,7 @@
 package consistency;
 
+import java.util.Iterator;
+
 // caching values in wring equation box seems to hurt a bit
 
 final class EquationBox {
@@ -29,50 +31,68 @@ final class EquationBox {
 	void addAllPossibleParentFacts() {
 		for(final EquationFact leftChildEquationFact : leftChildNode.equationFacts) {
 			for(final EquationFact rightChildEquationFact : rightChildNode.equationFacts) {
-				if(leftChildEquationFact.population == rightChildEquationFact.population) {
+				if(wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact)) {
 					for(final PopulationDelta parentPopulationDelta : propertyBox.parentPopulationDeltas(leftChildEquationFact.population)) {
-						if(propertyBox.wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta)) {
-							final EquationDelta equationDelta = EquationDelta.make(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
-							equationDeltas.add(equationDelta);
-							leftParentNode.equationFacts.add(equationDelta.leftParentEquationFact());
-							rightParentNode.equationFacts.add(equationDelta.rightParentEquationFact());
-						}
+						equationDeltas.add(EquationDelta.make(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta));
+						leftParentNode.equationFacts.add(EquationFact.makeLeftParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta));
+						rightParentNode.equationFacts.add(EquationFact.makeRightParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta));
 					}
 				}
 			}
 		}
 	}
 
-	boolean wringEquationBox() {
-		final SimpleHashSet<EquationDelta> verifiedEquationDeltas           = new SimpleHashSet<>();
-		final SimpleHashSet<EquationFact>  verifiedLeftParentEquationFacts  = new SimpleHashSet<>();
-		final SimpleHashSet<EquationFact>  verifiedRightParentEquationFacts = new SimpleHashSet<>();
+	boolean wringEquationBoxDown() {
 		final SimpleHashSet<EquationFact>  verifiedLeftChildEquationFacts   = new SimpleHashSet<>();
 		final SimpleHashSet<EquationFact>  verifiedRightChildEquationFacts  = new SimpleHashSet<>();
 
-		for(final EquationDelta equationDelta : equationDeltas) {
+		boolean equationDeltasChanged = false;
+		final Iterator<EquationDelta> iterator = equationDeltas.iterator();
+		while(iterator.hasNext()) {
+			final EquationDelta equationDelta = iterator.next();
 			if(leftParentNode.equationFacts.contains(equationDelta.leftParentEquationFact())
-			&& rightParentNode.equationFacts.contains(equationDelta.rightParentEquationFact())
-			&& leftChildNode.equationFacts.contains(equationDelta.leftChildEquationFact())
-			&& rightChildNode.equationFacts.contains(equationDelta.rightChildEquationFact())) {
-				verifiedEquationDeltas.add(equationDelta);
-				verifiedLeftParentEquationFacts.add(equationDelta.leftParentEquationFact());
-				verifiedRightParentEquationFacts.add(equationDelta.rightParentEquationFact());
+			&& rightParentNode.equationFacts.contains(equationDelta.rightParentEquationFact())) {
 				verifiedLeftChildEquationFacts.add(equationDelta.leftChildEquationFact());
 				verifiedRightChildEquationFacts.add(equationDelta.rightChildEquationFact());
+			} else {
+				iterator.remove();
+				equationDeltasChanged = true;
 			}
 		}
+		equationDeltas.decreaseCapacityIfAppropriate();
 
-		final boolean deltasChanged      = equationDeltas.retainAll(verifiedEquationDeltas);
-		final boolean leftParentChanged  = leftParentNode.equationFacts.retainAll(verifiedLeftParentEquationFacts);
-		final boolean rightParentChanged = rightParentNode.equationFacts.retainAll(verifiedRightParentEquationFacts);
 		final boolean leftChildChanged   = leftChildNode.equationFacts.retainAll(verifiedLeftChildEquationFacts);
 		final boolean rightChildChanged  = rightChildNode.equationFacts.retainAll(verifiedRightChildEquationFacts);
-		return deltasChanged || leftParentChanged || rightParentChanged || leftChildChanged || rightChildChanged;
+		return equationDeltasChanged || leftChildChanged || rightChildChanged;
+	}
+
+	boolean wringEquationBoxUp() {
+		final SimpleHashSet<EquationFact>  verifiedLeftParentEquationFacts  = new SimpleHashSet<>();
+		final SimpleHashSet<EquationFact>  verifiedRightParentEquationFacts = new SimpleHashSet<>();
+
+		boolean equationDeltasChanged = false;
+		final Iterator<EquationDelta> iterator = equationDeltas.iterator();
+		while(iterator.hasNext()) {
+			final EquationDelta equationDelta = iterator.next();
+			if(leftChildNode.equationFacts.contains(equationDelta.leftChildEquationFact())
+			&& rightChildNode.equationFacts.contains(equationDelta.rightChildEquationFact())) {
+				verifiedLeftParentEquationFacts.add(equationDelta.leftParentEquationFact());
+				verifiedRightParentEquationFacts.add(equationDelta.rightParentEquationFact());
+			} else {
+				iterator.remove();
+				equationDeltasChanged = true;
+			}
+		}
+		equationDeltas.decreaseCapacityIfAppropriate();
+
+		final boolean leftParentChanged  = leftParentNode.equationFacts.retainAll(verifiedLeftParentEquationFacts);
+		final boolean rightParentChanged = rightParentNode.equationFacts.retainAll(verifiedRightParentEquationFacts);
+		return equationDeltasChanged || leftParentChanged || rightParentChanged;
 	}
 
 	// -------------------------------------------------------------------------------------
 
+	// TODO: optimize away the would and do make
 	boolean rippleUpBoxFacts(
 		final DebugButterfly<EquationFact> equationFactsButterfly
 	) {
@@ -83,12 +103,13 @@ final class EquationBox {
 
 		for(EquationFact leftChildEquationFact : leftChildEquationFacts) {
 			for(EquationFact rightChildEquationFact : rightChildEquationFacts) {
-				if(leftChildEquationFact.population == rightChildEquationFact.population) {
+				if(wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact)) {
 					for(final PopulationDelta parentPopulationDelta : propertyBox.parentPopulationDeltas(leftChildEquationFact.population)) {
-						if(wouldAndDoMakeActualParents(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta)) {
-							final EquationDelta equationDelta = EquationDelta.make(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
-							leftParentEquationFacts.add(equationDelta.leftParentEquationFact());
-							rightParentEquationFacts.add(equationDelta.rightParentEquationFact());
+						if(doMakeActualParentEquationFacts(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta)) {
+							final EquationFact leftParentEquationFact  = EquationFact.makeLeftParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
+							final EquationFact rightParentEquationFact = EquationFact.makeRightParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
+							leftParentEquationFacts.add(leftParentEquationFact);
+							rightParentEquationFacts.add(rightParentEquationFact);
 						}
 					}
 				}
@@ -101,28 +122,29 @@ final class EquationBox {
 	// ---------------------------------------------------------------------------------------------
 	// helpers
 
-	boolean wouldAndDoMakeActualParents(
-		final EquationFact    leftChildEquationFact,
-		final EquationFact    rightChildEquationFact,
-		final PopulationDelta parentPopulationDelta
+	private boolean wouldMakeValidParentEquationFacts(
+		final EquationFact leftChildEquationFact,
+		final EquationFact rightChildEquationFact
 	) {
-		return propertyBox.wouldMakeValidParentEquationFacts(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta)
-			&& doMakeActualParentEquationFacts(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
+		return Utility.haveSameParity(leftChildEquationFact.hadamard, rightChildEquationFact.hadamard)
+		&& leftChildEquationFact.population == rightChildEquationFact.population
+		&& Utility.haveSameParity(leftChildEquationFact.spine, rightChildEquationFact.spine)
+		&& Utility.haveSameParity(leftChildEquationFact.partialSum, rightChildEquationFact.partialSum)
+		&& propertyBox.leftParentNode.hadamardDomain.isInDomain((leftChildEquationFact.hadamard + rightChildEquationFact.hadamard) / 2)
+		&& propertyBox.rightParentNode.hadamardDomain.isInDomain((leftChildEquationFact.hadamard - rightChildEquationFact.hadamard) / 2)
+		&& propertyBox.leftParentNode.spineDomain.isInDomain((leftChildEquationFact.spine + rightChildEquationFact.spine) / 2)
+		&& propertyBox.rightParentNode.spineDomain.isInDomain((leftChildEquationFact.spine + rightChildEquationFact.spine) / 2);
 	}
 
-	// ERROR: we must keep the equation facts checks
-	// ERROR: the equation deltas check is too generous, but we don't know why
-	private boolean doMakeActualParentEquationFacts(
+	boolean doMakeActualParentEquationFacts(
 		final EquationFact    leftChildEquationFact,
 		final EquationFact    rightChildEquationFact,
 		final PopulationDelta parentPopulationDelta
 	) {
-		final EquationFact  leftParentEquationFact  = EquationFact.makeLeftParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
-		final EquationFact  rightParentEquationFact = EquationFact.makeRightParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
-		final EquationDelta equationDelta           = EquationDelta.make(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
+		final EquationFact leftParentEquationFact  = EquationFact.makeLeftParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
+		final EquationFact rightParentEquationFact = EquationFact.makeRightParent(leftChildEquationFact, rightChildEquationFact, parentPopulationDelta);
 		return leftParentNode.equationFacts.contains(leftParentEquationFact)
-			&& rightParentNode.equationFacts.contains(rightParentEquationFact)
-			&& equationDeltas.contains(equationDelta);
+			&& rightParentNode.equationFacts.contains(rightParentEquationFact);
 	}
 
 	// ---------------------------------------------------------------------------------------------

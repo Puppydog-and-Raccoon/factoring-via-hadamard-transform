@@ -30,6 +30,7 @@ final class EquationButterfly {
 		fillParentBoxes();
 		stripTotalSums();
 		stripConstantConstraints(consistencyConstraints);
+		// using wring once cut time by a bit and didnt' change memory
 		wringUntilNoChange();
 	}
 
@@ -45,13 +46,13 @@ final class EquationButterfly {
 		boolean anythingChanged = false;
 		for(final int boxTier : propertyButterfly.boxTierIndicesTopDown) {
 			for(final int boxTerm : propertyButterfly.boxTermIndicesRandomly()) {
-				final boolean thisBoxChanged = equationBoxes[boxTier][boxTerm].wringEquationBox();
+				final boolean thisBoxChanged = equationBoxes[boxTier][boxTerm].wringEquationBoxDown();
 				anythingChanged = anythingChanged || thisBoxChanged;
 			}
 		}
 		for(final int boxTier : propertyButterfly.boxTierIndicesBottomUp) {
 			for(final int boxTerm : propertyButterfly.boxTermIndicesRandomly()) {
-				final boolean thisBoxChanged = equationBoxes[boxTier][boxTerm].wringEquationBox();
+				final boolean thisBoxChanged = equationBoxes[boxTier][boxTerm].wringEquationBoxUp();
 				anythingChanged = anythingChanged || thisBoxChanged;
 			}
 		}

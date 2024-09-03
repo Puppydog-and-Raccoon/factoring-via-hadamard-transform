@@ -304,6 +304,14 @@ public final class ConsistencyConstraint {
 		return canonicalizer.canonicalize(new ConsistencyConstraint(setOfNumbersOfTrues, setOfDecisionIds, numberOfDecisionsInProblem));
 	}
 
+	public static ConsistencyConstraint atLeastOne(
+		final SimpleHashSet<Integer> setOfDecisionIds,
+		final int                    numberOfDecisionsInProblem
+	) {
+		final SimpleHashSet<Integer> setOfNumbersOfTrues = SimpleHashSet.makeHashSetRange(1, setOfDecisionIds.size());
+		return canonicalizer.canonicalize(new ConsistencyConstraint(setOfNumbersOfTrues, setOfDecisionIds, numberOfDecisionsInProblem));
+	}
+
     /**
      * Create a vector containing all exactly one of two constraints for problems with the specified size.
      * This is used for testing.

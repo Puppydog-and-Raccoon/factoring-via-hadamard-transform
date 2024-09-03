@@ -12,18 +12,15 @@ class SolutionNode {
 	}
 
 	// NOTE: in leaf facts, spine values equal hadamard values
-	public boolean fillAllPossibleLeafStates() {
+	public void fillAllPossibleLeafStates() {
 		Utility.insist(propertyNode.isLeaf, "must be a leaf node");
 
-		boolean anythingChanged = false;
 		for(final int hadamard : propertyNode.hadamardDomain.enumerate()) {
 			for(final int population : propertyNode.populationDomain.enumerate()) {
 				final SolutionFact solutionFact = SolutionFact.make(hadamard, population, hadamard);
-				final boolean solutionFactsChanged = solutionFacts.add(solutionFact);
-				anythingChanged = anythingChanged || solutionFactsChanged;
+				solutionFacts.add(solutionFact);
 			}
 		}
-		return anythingChanged;
 	}
 
 	public void rippleUp(
