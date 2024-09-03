@@ -1,9 +1,12 @@
 applications/README
 
-This package solves both factoring and garbage can packing using consistency.
+This package solves both factoring and critter-complete problems using consistency.
  * factoring - given a product with 2n bits, find any pair of factors that each have n bits.
  * garbage can packing - given a group of garbage cans and their items,
    choose n garbage cans that contain no items in common.
+ * satisfied critter - given a set of clawses that indicates the acceptable
+   combinations of the presences and absences of various garbage can items,
+   choose a combination of present and absent garbage can items that satisfies the critter.
 
 We organized the code so that the problem and solution classes are trivial and
 so that the core algorithm functions are simple.
@@ -15,8 +18,11 @@ For example, the tests contain the following code.
    final GarbageCanPackingProblem garbageCanPackingProblem = new GarbageCanPackingProblem(garbageCans, numberOfGarbageCansToSelect);
    final GarbageCanPackingSolution garbageCanPackingSolution = garbageCanPackingProblem.solve();
 
-Garbage can packing has been tested on problems with 26 cans.
+   final SatisfiedCritterProblem satisfiedCritterProblem = new SatisfiedCritterProblem(clawses, pad(testSolutions));
+   final SatisfiedCritterSolution satisfiedCritterSolution = satisfiedCritterProblem.solve();
+
 Factoring has only been tested on trivial 2-bit products.
+Garbage can packing has been tested on problems with 24 cans.
 Larger problems do not fit on our computers. We are working to overcome this limit.
 
-Note: we always run the algorithms from the test classes.
+Usage Note: we run the algorithms from the test classes.

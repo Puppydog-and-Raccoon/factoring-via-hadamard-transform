@@ -73,7 +73,7 @@ public class GarbageCanPackingSolution {
 	 * @param garbageCanSelections the garbage can selections
 	 * @return whether any 2 selected garbage cans contain the same item
 	 */
-	private boolean selectionsAreIndependent(final String[][] garbageCansAndTheirItems, final boolean[] garbageCanSelections) {
+	private boolean selectionsAreIndependent(final GarbageItem[][] garbageCansAndTheirItems, final boolean[] garbageCanSelections) {
 		final SimpleHashSet<String> selectedItems = new SimpleHashSet<String>();
 		for(int i = 0; i < garbageCansAndTheirItems.length; i++) {
 			if(garbageCanSelections[i]) {

@@ -11,10 +11,10 @@ import consistency.SimpleHashSet;
 public class GarbageCanPackingProblem {
 	public static final String BAD_NUMBER_OF_GARBAGE_CANS_TO_CHOOSE = "bad number of garbage cans to choose";
 
-	public final String[][]  garbageCansAndTheirItems;
+	public final GarbageItem[][] garbageCansAndTheirItems;
 	public final int         numberOfGarbageCansToChoose;
 	public final boolean[][] solutions;   // used for debugging. can be null
-	public final String[]    uniqueItems;
+	public final GarbageItem[]   uniqueItems;
 
 	/**
 	 * The constructor
@@ -24,7 +24,7 @@ public class GarbageCanPackingProblem {
 	 * @param testSolutions solutions, used for testing, generally will be null
 	 */
 	public GarbageCanPackingProblem(
-		final String[][]  garbageCansAndTheirItems,
+		final GarbageItem[][] garbageCansAndTheirItems,
 		final int         numberOfGarbageCansToChoose,
 		final boolean[][] testSolutions
 	) {
@@ -72,13 +72,13 @@ public class GarbageCanPackingProblem {
 	 * @param garbageCansAndTheirItems the items in each garbage can
 	 * @return the array of unique items
 	 */
-	private static String[] uniqueItems(String[][] garbageCansAndTheirItems) {
-		final SimpleHashSet<String> uniqueItems = new SimpleHashSet<String>();
-		for(final String[] garbageCan : garbageCansAndTheirItems) {
-			for(final String item : garbageCan) {
+	private static GarbageItem[] uniqueItems(GarbageItem[][] garbageCansAndTheirItems) {
+		final SimpleHashSet<GarbageItem> uniqueItems = new SimpleHashSet<GarbageItem>();
+		for(final GarbageItem[] garbageCan : garbageCansAndTheirItems) {
+			for(final GarbageItem item : garbageCan) {
 				uniqueItems.add(item);
 			}
 		}
-		return uniqueItems.toArray(new String[0]);
+		return uniqueItems.toArray(new GarbageItem[0]);
 	}
 }

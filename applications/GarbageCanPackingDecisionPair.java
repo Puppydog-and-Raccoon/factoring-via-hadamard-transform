@@ -14,7 +14,7 @@ class GarbageCanPackingDecisionPair {
 	/**
 	 * non-null means garbage can with array of items, null means padding
 	 */
-	final String[] garbageCanItems;
+	final GarbageItem[] garbageCanItems;
 
 	/**
 	 * index of this decision in decision space
@@ -28,8 +28,8 @@ class GarbageCanPackingDecisionPair {
 	 * @param decisionId the index of the first decision in the consistency vector
 	 */
 	private GarbageCanPackingDecisionPair(
-		final String[] garbageCanItems,
-		final int      decisionId
+		final GarbageItem[] garbageCanItems,
+		final int       decisionId
 	) {
 		this.garbageCanItems = garbageCanItems;
 		this.decisionId      = decisionId;
@@ -41,7 +41,7 @@ class GarbageCanPackingDecisionPair {
 	 * @param item the item of interest
 	 * @return whether the condition is true
 	 */
-	boolean concernsGarbageCanContaining(final String item) {
+	boolean concernsGarbageCanContaining(final GarbageItem item) {
 		return Utility.contains(item, garbageCanItems);
 	}
 
@@ -70,7 +70,7 @@ class GarbageCanPackingDecisionPair {
 	 * @param packingDecisionIndex
 	 * @return the new decision pair
 	 */
-	static GarbageCanPackingDecisionPair makeGarbageCan(final String[] items, final int packingDecisionIndex) {
+	static GarbageCanPackingDecisionPair makeGarbageCan(final GarbageItem[] items, final int packingDecisionIndex) {
 		Utility.insist(items != null, "items must not be null");
 		return new GarbageCanPackingDecisionPair(items, 2 * packingDecisionIndex);
 	}

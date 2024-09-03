@@ -47,7 +47,7 @@ public class GarbageCanPackingInternals {
 		final Vector<GarbageCanPackingDecisionPair> decisionPairs = new Vector<GarbageCanPackingDecisionPair>();
 
 		// add one decision pair for each garbage can
-		for(String[] garbageCanItems : garbageCanPackingProblem.garbageCansAndTheirItems) {
+		for(GarbageItem[] garbageCanItems : garbageCanPackingProblem.garbageCansAndTheirItems) {
 			decisionPairs.add(GarbageCanPackingDecisionPair.makeGarbageCan(garbageCanItems, decisionPairs.size()));
 		}
 
@@ -125,7 +125,7 @@ public class GarbageCanPackingInternals {
 		final SimpleHashSet<ConsistencyConstraint> consistencyConstraints = new SimpleHashSet<ConsistencyConstraint>();
 
 		// add one constraint for each item, ignoring singletons
-		for(final String uniqueItem : garbageCanPackingProblem.uniqueItems) {
+		for(final GarbageItem uniqueItem : garbageCanPackingProblem.uniqueItems) {
 			final SimpleHashSet<Integer> indices = indicesForProperty(packingDecisionPairs, dp -> dp.concernsGarbageCanContaining(uniqueItem));
 			final ConsistencyConstraint constraint = ConsistencyConstraint.atMostOneOf(indices, numberOfDecisionsInConsistencyProblem);
 			if(indices.size() > 1) {
