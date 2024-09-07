@@ -1,1 +1,1 @@
-This application solves factoting in polynomial time via hadamard transforms.
+This application factors integers in polynomial time via hadamard transforms.
